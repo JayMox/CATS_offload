@@ -29,7 +29,7 @@ df$VV <- c(0, diff(df$depth))
 #df$VV_1Hz <- c(rep(0, datFreq), diff(df$depth, datFreq))
 
 #smooth VV (CFW uses this filter rep(1,5) in depth_window_fig in gRumble ms; not sure why)
-df$smVV <- stats::filter(df$VV, filter = rep(1,datFreq), sides = 2, circular = T)
+df$VVsm <- stats::filter(df$VV, filter = rep(1,datFreq), sides = 2, circular = T)
 #df$VV_1Hz <- filter(df$VV_1Hz, filter = rep(1,datFreq), sides = 2, circular = T)
 
 #I BELIEVE the instaneous VV calc w/ a filter at datFreq produces VV rates over 1 sec; negating need for VV_1Hz
@@ -38,7 +38,7 @@ df$smVV <- stats::filter(df$VV, filter = rep(1,datFreq), sides = 2, circular = T
 #save(df, file = (paste(dd, "CC_7_06_SA2017/CC0706_SA2017_all.RData", sep = "/")))
 
 #subset salient data for trigger eval
-df2 <- select(df, depth, VV, smVV, Camera, Camera.time, CC.status, Flags)
+df2 <- select(df, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
 df2$DEPTH <- df$Depth..100bar..1..m.
 df2$VV <- as.numeric(df2$VV)
  
@@ -50,7 +50,7 @@ df2$trig <- ifelse(df2$VVtrig > 0.2, TRUE, FALSE)
 quartz()
 p <- ggplot(df2, aes(y = DEPTH, x=1:nrow(df2))) +
   geom_vline(xintercept = which(df2$Camera %in% c(10, 11,12, 13, 14)), colour = "gray10") + 
-  geom_line(aes(col = abs(smVV))) +
+  geom_line(aes(col = abs(VVsm))) +
   scale_color_gradient2(low = "gray50",mid = "orange", high = "red",  midpoint = 0.15) +
   geom_vline(xintercept = which(df2$trig == TRUE), linetype = "dotted") 
 p
