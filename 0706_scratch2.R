@@ -1,5 +1,6 @@
 #stitching together data from other tags
 library(dplyr)
+library(ggplot2)
 
 #set up data drive & null data frame
 #dd = "/Volumes/HELLBENDY/MBA_GWS/SOAF17_data"
@@ -47,13 +48,16 @@ df2$VVtrig <- slideVVtrig(data = df2$DEPTH, window = datFreq, step = 1)
 df2$trig <- ifelse(df2$VVtrig > 0.2, TRUE, FALSE)
   
 
-quartz()
+#downsample to 5Hz for 
+
+dev.new()
 p <- ggplot(df2, aes(y = DEPTH, x=1:nrow(df2))) +
   geom_vline(xintercept = which(df2$Camera %in% c(10, 11,12, 13, 14)), colour = "gray10") + 
   geom_line(aes(col = abs(VVsm))) +
-  scale_color_gradient2(low = "gray50",mid = "orange", high = "red",  midpoint = 0.15) +
+  scale_color_gradient(low = "blue",high = "red") +
   geom_vline(xintercept = which(df2$trig == TRUE), linetype = "dotted") 
 p
+ggsave("0706_trigeval.png", p)
 #p + geom_vline(xintercept = which(df2$Camera %in% c(10, 11,12, 13, 14)), colour = "red", alpha = 0.2)
 #p + geom_vline(xintercept = 1:nrow(df2), colour = "red", alpha = 0.2)
 
