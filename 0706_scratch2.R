@@ -17,10 +17,10 @@ temp <- list.files(pattern="*.csv")
 dat <- lapply(temp, read.csv, fileEncoding = "latin1")
 
 df <- do.call('rbind', dat)
-#datFreq = 100; #100Hz data 
+datFreq = 100; #100Hz data 
 
 #downsample to 20Hz
-df <- df[seq(1, nrow(df), by = 5),]; datFreq = 20;
+#df <- df[seq(1, nrow(df), by = 5),]; datFreq = 20;
 
 #smooth depth data w/ moving avg
 df$depth <- stats::filter(df[,15], filter = rep(1,5*datFreq)/(5*datFreq), sides = 2, circular = T)
@@ -30,6 +30,10 @@ df$VVsm <- stats::filter(df$VV, filter = rep(1,datFreq), sides = 2, circular = T
 
 #write out data for easy load in
 save(df, file = "0706_SA2017_20hz.RData")
+save(df, file = "0706_SA2017_100hz.RData")
+
+############LOAD DATA
+load(paste(dd, "CC_7_06_SA2017", "0706_SA2017_20hz.RData", sep = "/"))
 
 #subset salient data for trigger eval
 df2 <- dplyr::select(df, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
@@ -56,10 +60,15 @@ dev.new()
 p <- ggplot(df2, aes(y = rawDEPTH, x=1:nrow(df2))) +
   geom_vline(xintercept = which(df2$Camera %in% c(10, 11,12, 13, 14)), color = "pink", alpha = 0.1) + 
   geom_line(aes(col = abs(VVsm))) +
-  scale_color_gradient(low = "blue",high = "red") +
-  geom_vline(xintercept = which(df2$trig == TRUE), linetype = "dotted") 
-p
-ggsave("0706_trigeval_20Hz.png", p)
+  scale_color_gradient(low = "blue",high = "red")
+
+#add on behavioral triggers
+trig_idx <- which(df2$trig == TRUE)
+trig_idx2 <- split(trig_idx, diff(trig_idx) != 1)  #TRUEs represent non-consecutive sequences; ie, indpt camera triggers?
+
+p + geom_vline(xintercept = trig_idx2$`TRUE`, linetype = "dotted") 
+
+ggsave("0706_trigeval.png", p)
 #p + geom_vline(xintercept = which(df2$Camera %in% c(10, 11,12, 13, 14)), colour = "red", alpha = 0.2)
 #p + geom_vline(xintercept = 1:nrow(df2), colour = "red", alpha = 0.2)
 
