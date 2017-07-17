@@ -1,0 +1,70 @@
+---
+title: "CATStag_0706_trigeval"
+author: "JHMoxley"
+date: "July 17, 2017"
+output: html_document
+---
+This is a document to explore and analyze the behavioral trigger functioning of CATS camera tags deployed on free swimming white sharks in South Africa.  Tags were deployed May-June 2017 and programmed to record tri-axial accelerations and depth, in addition to video.  Camera's are programmed to record via two parameters: 1) pre-determined duty cycle intervals (set as hours locally); and 2) a behavioral trigger, as determined by a threshold in depth rate/vertical velocity.  
+
+```{r setup, include=FALSE, echo = FALSE}
+###DATA READ IN
+library(dplyr)
+library(ggplot2)
+rm(list = ls())
+
+#set up data drive & null data frame
+#dd <- "/Volumes/HELLBENDY/MBA_GWS/SOAF17_data"
+dd <- "/Volumes/UNTITLED 1/CamTag"; 
+deployID <- "CC_SA2017_0706D1"
+datFreq <- 20
+
+#DATA LOAD IN
+#See 0706 scratch for data read in
+load(paste(dd, paste(deployID, datFreq, "hz.RData", sep = "_"), sep = "/"))
+
+#subset relevant fields for trigger eval
+df2 <- dplyr::select(df, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
+df2$rawDEPTH <- df$Depth..100bar..1..m.
+df2$VV <- as.numeric(df2$VV)
+
+#write a 20Hz csv for igor
+write.csv(df, file = file.path(dd, deployID, paste(deployID, datFreq, "Hz", "igor.csv", sep = "_")))
+```
+
+##Trigger Settings
+Behavioral triggers are preset to turn the camera on when a specified depth rate is exceeded.  Currently as per emails with N. Liebsch, depth rate is calculated by the difference between max and min depth values observed in recent memory (set by the time interval parameter).
+
+![Trigger settings for the deployment](/Volumes/UNTITLED 1/CamTag/CC_SA2017_0706D1/CC_SA2017_0706D1_trigparams.jpg)
+
+As seen, the camera is set to turn on when the max and min depth value over the previous minute is greater than 0.2m.  
+
+N.B. re: depth fields:  Depth was smoothed across 5 seconds during pre-processing & retained in depth col.  Raw depth data from the tag offload is retained in the rawDepth field.  Vertical Velocity (col field: VV) was calculated instaneously from adjacent depth records, additionally smoothed over 1 second in col VVsm.  
+
+```{r, echo = TRUE}
+#custom fxn for CATs trigger evaluation
+slideVVtrig <- function(data, window, step){
+  total <- length(data)
+  spots <- seq(from=1, to=total-window, by=step)
+  result <- vector(length = length(spots))
+  for(i in 1:(length(spots)-window)){
+    result[i] <- diff(range(data[spots[i]:spots[i + window]]))
+  }
+  return(c(rep(NA, window), result))  #pad front end of result where diff cannot be calc'ed
+}
+
+#emulate CATS trigger method
+df2$VVtrig <- slideVVtrig(data = df2$rawDEPTH, window = datFreq, step = 1)
+df2$trig <- ifelse(df2$VVtrig > 0.2, TRUE, FALSE)
+```
+
+## Depth trace
+
+
+```{r pressure, echo=FALSE}
+sc <- df2[3000000:3500000,]
+
+#depth trace
+plot 
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
