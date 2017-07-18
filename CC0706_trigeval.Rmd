@@ -22,13 +22,23 @@ datFreq <- 20
 #See 0706 scratch for data read in
 load(paste(dd, paste(deployID, datFreq, "hz.RData", sep = "_"), sep = "/"))
 
+#trim ends of deployments & index time tag on shark
+#start/stop idx determined visually on igor
+tagon <- 242030; tagoff <- 4568775
+df <- df[tagon:tagoff,]
+df$tidx <- seq(0, by = 1/datFreq, length.out = nrow(df))
+#add time index
+
+#add in duty cycle field
+
+
 #subset relevant fields for trigger eval
-df2 <- dplyr::select(df, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
+df2 <- dplyr::select(df, tidx, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
 df2$rawDEPTH <- df$Depth..100bar..1..m.
 df2$VV <- as.numeric(df2$VV)
 
 #write a 20Hz csv for igor
-write.csv(df, file = file.path(dd, deployID, paste(deployID, datFreq, "Hz", "igor.csv", sep = "_")))
+#write.csv(df, file = file.path(dd, paste(deployID, datFreq, "Hz", "igor.csv", sep = "_")))
 ```
 
 ##Trigger Settings
@@ -55,16 +65,51 @@ slideVVtrig <- function(data, window, step){
 #emulate CATS trigger method
 df2$VVtrig <- slideVVtrig(data = df2$rawDEPTH, window = datFreq, step = 1)
 df2$trig <- ifelse(df2$VVtrig > 0.2, TRUE, FALSE)
+
+trig_prop <- sum(df2$trig, na.rm = TRUE)/nrow(df2)
 ```
+
+Using raw depth data and the trigger algorithm, `r round(trig_prop, 5)*100` percent of the data record fulfills the trigger setting.  
 
 ## Depth trace
 
 
 ```{r pressure, echo=FALSE}
+####SCRATCH CODING SMALLER SUBSET
 sc <- df2[3000000:3500000,]
+#sc$tidx <- seq(0, by = 1/datFreq, length.out = nrow(sc))
 
-#depth trace
-plot 
+#depth trace.. ATTEMPT W/ BASEPLOT
+dev.new()
+plot(sc$depth ~ sc$tidx, type = "n")
+for(i in 2:nrow(sc)){
+  segments(y0 = sc$depth[i-1], y1 = sc$depth[i], x0 = sc$tidx[i-1], x1 = sc$tidx[i], col = rainbow(sc$VV[i]))
+}
+
+dev.new()
+p <- ggplot(sc, aes(y = rawDEPTH, x=tidx)) +
+  geom_vline(xintercept = filter(sc, Camera %in% c(10, 11, 12, 13, 14))$tidx, color = "pink", alpha = 0.1) + 
+  geom_line(aes(col = abs(VVsm))) +
+  scale_color_gradient(low = "blue",high = "red")
+p + geom_vline(xintercept = filter(sc, c(FALSE, diff(trig)) == 1)$tidx, linetype = "dotted") + labs(title = paste(deployID, "depth trace w/ camera (pink) & trigger (dotted) events"))
+#plot only the first instance of the trigger firing
+dev.off()
+
+#looking into sequences of trigger values
+trig_seqs <- data.frame(runlength = rle(sc$trig)$lengths, trig_val = rle(sc$trig)$values); trig_seqs$idx <- seq(1, length.out = nrow(trig_seqs))
+#map run lengths back into full df
+sc$trig_len <- rep(trig_seqs$runlength, times = trig_seqs$runlength)
+
+dev.new()
+ggplot(data = trig_seqs) + geom_histogram(aes(runlength, fill = trig_val)) + facet_wrap(~trig_val, scales = "free") + labs(title = "sequences of fulfilled trigger values are typically less than 50 records long")
+dev.off()
+
+ggplot(data = sc) + geom_histogram(aes(trig_len, fill = Flags, colour = CC.status)) + facet_wrap(~trig, scales = "free") + labs(title = "Trigger flags (-T-) during behavioral/trigger sequences of increasing length")
+
+ggplot(data = trig_seqs) + geom_col(data = trig_seqs, aes(y = ifelse(trig_val == TRUE, runlength,-runlength), x = idx, fill = trig_val)) + ylim(-250, 100)
 ```
+Trigger values are being fulfilled frequently throughout the data record.  However, behavioral sequences that fulfill trigger settings consistently are relatively brief (<50 records typically.. which is a few seconds at this resolution).
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, echo = FALSE}
+trig_seqs <- rle(sc$trig)
+```
