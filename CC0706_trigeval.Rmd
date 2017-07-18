@@ -29,11 +29,18 @@ df <- df[tagon:tagoff,]
 df$tidx <- seq(0, by = 1/datFreq, length.out = nrow(df))
 #add time index
 
-#add in duty cycle field
+#reclass time field & add in duty cycle field
+#(tmp <- strptime(paste(df$Date..local.[1:5], df$Time..local.[1:5]), format = "%d.%m.%Y %H:%M:%OS", tz = "Africa/Johannesburg"))
+options(digits.secs = 3);
+df$dts.UTC <- strptime(paste(df$Date..UTC., df$Time..UTC.), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
+df$dts.local <- strptime(paste(df$Date..local., df$Time..local.), format = "%d.%m.%Y %H:%M:%OS", tz = "Africa/Johannesburg")
 
+#duty cycles programmed: 
+df$d.cycle <- 
+  
 
 #subset relevant fields for trigger eval
-df2 <- dplyr::select(df, tidx, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
+df2 <- dplyr::select(df, tidx, dts.local, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
 df2$rawDEPTH <- df$Depth..100bar..1..m.
 df2$VV <- as.numeric(df2$VV)
 

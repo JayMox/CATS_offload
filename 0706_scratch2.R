@@ -29,8 +29,8 @@ df$VV <- c(0, diff(df$depth)) #calc VV
 df$VVsm <- stats::filter(df$VV, filter = rep(1,datFreq), sides = 2, circular = T)
 
 #write out data for easy load in
-save(df, file = "0706_SA2017_20hz.RData")
-save(df, file = "0706_SA2017_100hz.RData")
+#save(df, file = "0706_SA2017_20hz.RData")
+#save(df, file = "0706_SA2017_100hz.RData")
 
 ############LOAD DATA
 load(paste(dd, "CC_7_06_SA2017", "0706_SA2017_20hz.RData", sep = "/"))
