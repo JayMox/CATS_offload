@@ -162,7 +162,7 @@ df4$P.. <- ifelse(df3$Flags == "P--", 8, NA)
 
 #plot
 quartz()
-plot(df4$dts.local, df4$dc_prog, col = "red", ylim = c(-7,8))
+plot(df4$dts.local, df4$dc_prog, col = "white", axes = FALSE, ylim = c(-7,8), xlab = "", ylab = "", main = "0706D1 camera/trigger codes")
 points(df4$dts.local, as.numeric(df4$VVtrig_expc), col = "green")
 points(df4$dts.local, as.numeric(df4$dc_prog), col = "pink")
 points(df4$dts.local, as.numeric(df4$CC.status), col = "red")
@@ -170,4 +170,11 @@ points(df4$dts.local, as.numeric(df4$CC.status), col = "red")
 points(df4$dts.local, df4$cam10, col = "slateblue"); points(df4$dts.local, df4$cam11, col = "skyblue"); points(df4$dts.local, df4$cam12, col = "royalblue"); points(df4$dts.local, df4$cam13, col = "steelblue"); points(df4$dts.local, df4$cam14, col = "turquoise"); points(df4$dts.local, df4$cam20s, col = "tan"); points(df4$dts.local, df4$cam90s, col = "tomato")
 #add triger codes
 points(df4$dts.local, df4$.T., col = "seagreen"); points(df4$dts.local, df4$.TS, col = "palegreen"); points(df4$dts.local, df4$PTS, col = "olivedrab2"); points(df4$dts.local, df4$..S, col = "khaki"); points(df4$dts.local, df4$P.., col = "lavender")
+abline(h = 3.5, lty = 2); abline(h = -0.5, lty = 2)
+#y axis labels
+axis(side=2, at = seq(-7,8,1), labels =  c("CC Err", "CC BD", "CC Rec", 
+      "CC BU13", "CC BU12", "CC BU11", "CC BU10",  "", "DC programmed", "CC.Status", "VV > trig", 
+      "-T-", "-TS", "PTS", "--S", "P--"), las = 2, cex = 0.5)
+axis.POSIXct(side = 1, at = seq(as.POSIXct(min(df4$dts.local)), as.POSIXct(max(df4$dts.local)), length.out = 12), format = "%b%d %H:%M", las = 2)
+
 ```
