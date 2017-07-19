@@ -10,6 +10,8 @@ This is a document to explore and analyze the behavioral trigger functioning of 
 ###DATA READ IN
 library(dplyr)
 library(ggplot2)
+library(lubridate)
+library(reshape2)
 rm(list = ls())
 
 #set up data drive & null data frame
@@ -17,6 +19,7 @@ rm(list = ls())
 dd <- "/Volumes/UNTITLED 1/CamTag"; 
 deployID <- "CC_SA2017_0706D1"
 datFreq <- 20
+trigparam <- 0.2  #threshold defined for the trigger to fire
 
 #DATA LOAD IN
 #See 0706 scratch for data read in
@@ -35,9 +38,10 @@ options(digits.secs = 3);
 df$dts.UTC <- strptime(paste(df$Date..UTC., df$Time..UTC.), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
 df$dts.local <- strptime(paste(df$Date..local., df$Time..local.), format = "%d.%m.%Y %H:%M:%OS", tz = "Africa/Johannesburg")
 
-#duty cycles programmed: 
-df$d.cycle <- 
-  
+#duty cycles programmed: 1000, 1200, 1500 local for an hour each (see CC_SA2017_0706D1_tagparams.jpg)
+df$d.cycle <- ifelse(hour(df$dts.local) %in% c(10, 12, 15), TRUE, FALSE)
+
+ggplot(data = df) + geom_line(aes(x = dts.local, y = d.cycle, size = 3)) + theme_bw()
 
 #subset relevant fields for trigger eval
 df2 <- dplyr::select(df, tidx, dts.local, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
@@ -117,6 +121,53 @@ ggplot(data = trig_seqs) + geom_col(data = trig_seqs, aes(y = ifelse(trig_val ==
 ```
 Trigger values are being fulfilled frequently throughout the data record.  However, behavioral sequences that fulfill trigger settings consistently are relatively brief (<50 records typically.. which is a few seconds at this resolution).
 
+###Stacked behavioral sequence plotting
+Here I plot the data streams [VARS HERE] in a stacked line plots to show the sequence of different events in the tag's programming
 ```{r, echo = FALSE}
-trig_seqs <- rle(sc$trig)
+#downsample to 5Hz
+df3 <- df[seq(1, nrow(df), by = 4),]; datFreq = 5 #Hz
+
+df3 <- select(df3, dts.UTC, tidx, dts.local, d.cycle, depth, Depth..100bar..1..m., VV, VVsm, Camera, Camera.time, CC.status, Flags)
+#simulate CATS trigger method
+colnames(df3)[6] <- "rawDEPTH"
+df3$VVtrig <- slideVVtrig(data = df3$rawDEPTH, window = datFreq, step = 1)
+df3$trig <- ifelse(df3$VVtrig > 0.2, TRUE, FALSE)
+
+#track/catalogue events in time series
+df4 <- data.frame(NA)
+df4 <- select(df3, tidx, dts.local)
+df4$dc_prog <- ifelse(hour(df4$dts.local) %in% c(10, 12, 15), 1, NA)
+df4$VVtrig_expc <- ifelse(df3$VVtrig >= trigparam, 3, NA)
+df4$CC.status <- ifelse(df3$CC.status == "R--", 2, NA)
+#NEEDS SOME METRIC HERE OF WHEN THE CAMERA WAS ACTUALLY On
+
+#Cam fields
+#unique(df$Camera)
+df4$cam10 <- ifelse(df3$Camera == 10, -1, NA)
+df4$cam11 <- ifelse(df3$Camera == 11, -2, NA)
+df4$cam12 <- ifelse(df3$Camera == 12, -3, NA)
+df4$cam13 <- ifelse(df3$Camera == 13, -4, NA)
+df4$cam14 <- ifelse(df3$Camera == 14, -5, NA)
+df4$cam20s <- ifelse(df3$Camera >= 20 & df3$Camera <= 30, -6, NA)
+df4$cam90s <- ifelse(df3$Camera >= 90, -7, NA)
+
+#Trigger fields
+#unique(df$Flags)
+df4$.T. <- ifelse(df3$Flags == "-T-", 4, NA)
+df4$.TS <- ifelse(df3$Flags == "-TS", 5, NA)
+df4$PTS <- ifelse(df3$Flags == "PTS", 6, NA)
+df4$..S <- ifelse(df3$Flags == "--S", 7, NA)
+df4$P.. <- ifelse(df3$Flags == "P--", 8, NA)
+
+
+#plot
+quartz()
+plot(df4$dts.local, df4$dc_prog, col = "red", ylim = c(-7,8))
+points(df4$dts.local, as.numeric(df4$VVtrig_expc), col = "green")
+points(df4$dts.local, as.numeric(df4$dc_prog), col = "pink")
+points(df4$dts.local, as.numeric(df4$CC.status), col = "red")
+#add camera codes
+points(df4$dts.local, df4$cam10, col = "slateblue"); points(df4$dts.local, df4$cam11, col = "skyblue"); points(df4$dts.local, df4$cam12, col = "royalblue"); points(df4$dts.local, df4$cam13, col = "steelblue"); points(df4$dts.local, df4$cam14, col = "turquoise"); points(df4$dts.local, df4$cam20s, col = "tan"); points(df4$dts.local, df4$cam90s, col = "tomato")
+#add triger codes
+points(df4$dts.local, df4$.T., col = "seagreen"); points(df4$dts.local, df4$.TS, col = "palegreen"); points(df4$dts.local, df4$PTS, col = "olivedrab2"); points(df4$dts.local, df4$..S, col = "khaki"); points(df4$dts.local, df4$P.., col = "lavender")
 ```
