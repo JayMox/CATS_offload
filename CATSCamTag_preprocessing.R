@@ -52,7 +52,7 @@ df <- rename(df, rawDEPTH = Depth..100bar..1..m.)
 #########
 ##Duty Cycling
 #########
-df$dc_prog <- ifelse(hour(df$dts.local %in% dc.prog), TRUE, FALSE)
+df$dc_prog <- ifelse(hour(df$dts.local) %in% dc.prog, TRUE, FALSE)
 
 ########
 ###SMOOTHING
