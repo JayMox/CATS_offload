@@ -1,5 +1,5 @@
 ##0704 trig/cam code plotting
-##subsampling by the hour to create animations of time series of various codes
+##subsampling by 3hour blocks to create animations of time series of various codes
 ##JHMoxley
 
 #prep workbench
@@ -38,34 +38,54 @@ levels(df2$CamCode) = list("BU10" = "10", "BU11" = "11", "BU12" = "12", "BU13" =
 #                           "BD" = c("20", "21", "22", "23", "24", "25", "26"), 
 #                           "err" = c("90", "91"))
 df2$Flags <- factor(ifelse(as.character(df2$Flags) == "---", NA, as.character(df2$Flags)), 
-                    levels(df2$Flags) <- c("-T-", "-TS", "PTS", "--S", "P--"))
+             levels <- c("-T-", "-TS", "PTS", "--S", "P--"))
             #remove blank reading, "---", for plotting
 
 ###########
 #plot
 ##########
-#tmp <- df;
-#loop to plot by 3 hour segments
-deploy_idx <- seq(min(df2$dts.local), max(df2$dts.local), by = 3*60*60)
 #open pdf
 pdf(paste(dd, "figs", paste(sppID, projID, deployID, "TagCodesPlot.pdf", sep = "_"), sep="/"))
+
+#full dataset plots
+#plot
+  plot(df2$dts.local, df2$dc_prog, type = "n", axes = F, ylim=c(-(length(levels(df2$CamCode))+1),(length(levels(df2$Flags))+1)), 
+     xlab = "", ylab = "", main = paste(deployID, "cam/trig codes; FULL DATA RECORD", sep = " "))
+  #y axis labels
+  axis(side=2, at = seq((0-(length(levels(df2$CamCode))+1)),(length(levels(df2$Flags))+1),1), 
+     labels = c(rev(levels(df2$CamCode)), "DC_prog", "CC.status", "trig_obs", levels(df2$Flags)), 
+     las = 2, cex = 0.5)
+  #x axis labels
+  axis.POSIXct(side = 1, at = seq(min(df2$dts.local), max(df2$dts.local), by = 3*60*60), format = "%b%d %H:%M", las = 2)
+  #add data
+  points(df2$dts.local, ifelse(df2$CC.status == "R--", 0, NA), col = '#fc8d59', pch = "|") #what recorded
+  points(df2$dts.local, ifelse(df2$dc_prog == TRUE, -1, NA), col = '#ef6548', pch = "|") #what is programmed to record
+  points(df2$dts.local, ifelse(df2$trig == TRUE, 1, NA), col = '#41ae76', pch = "|") #observed triggers
+  #prep color palettes
+  camcolfunc <- colorRampPalette(c("#ffffbf", "#f46d43"))
+  flagcolfunc <- colorRampPalette(c("#e7d4e8", "#762a83"))
+  #add cam/trig codes
+  points(df2$dts.local, (0-(as.numeric(df2$CamCode) + 1)), col = camcolfunc(nlevels(df2$CamCode))[as.numeric(df2$CamCode)], pch = "|")
+  points(df2$dts.local, (as.numeric(df2$Flags)+1), col = flagcolfunc(nlevels(df2$Flags))[as.numeric(df2$Flags)], pch = "|")
+  abline(h = 1.5, lty = 2); abline(h = -1.5, lty = 2)
+
+
+print(paste("plot of", deployID, "full data record (at", datFreq," Hz) initalizes the file", sep = " "))
+
+###3Hr segments
+#loop to plot by 3 hour segments
+deploy_idx <- seq(min(df2$dts.local), max(df2$dts.local), by = 3*60*60)
+
 for(i in 1:length(deploy_idx)){
   if(i < length(deploy_idx)) {start <- deploy_idx[i]; stop <- deploy_idx[i+1]; }
-  print(i)
-  print(paste("start set as", start, sep = " "))
-  print(paste("stop set as", stop, sep = " "))
   if(i == length(deploy_idx)){ start = deploy_idx[i]; stop <- max(df2$dts.local);}
-  print(i)
-  print(paste("start set as", start, sep = " "))
-  print(paste("stop set as", stop, sep = " "))
-  
   
   #subset data
   tmp <- df2[df2$dts.local >= start & df2$dts.local <= stop,]
   
   #plot
   plot(tmp$dts.local, tmp$dc_prog, type = "n", axes = F, ylim=c(-(length(levels(tmp$CamCode))+1),(length(levels(tmp$Flags))+1)), 
-       xlab = "", ylab = "", main = paste(deployID, "cam/trig codes;", i, "of", length(deploy_idx), "trihour segments", sep = " "))
+       xlab = "", ylab = "", main = paste(deployID, "cam/trig codes;", i, "of", length(deploy_idx), "3hr blocks starting", start, sep = " "))
   
   #y axis labels
   axis(side=2, at = seq((0-(length(levels(tmp$CamCode))+1)),(length(levels(tmp$Flags))+1),1), 

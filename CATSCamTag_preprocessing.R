@@ -20,7 +20,7 @@ projID <- "SA2017"
 locTZ <- "Africa/Johannesburg"
 sppID <- "CC"
 datFreq.desired <- 5 #Hz
-dc.prog <- c(10, 12, 15) #hours in local time
+dc.prog <- c(7:8,10:12,14:16) #hours in local time
 trig.thresh <- 0.2
 ###############
 
@@ -80,9 +80,9 @@ df$trig <- ifelse(slideVVtrig(data = df$rawDEPTH, window = datFreq, step = 1)>=t
 ##Save full dataset
 save(df, file = file.path(substr(dd, 0, clip), 
                           paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep=".")))
-print(paste(deployID, "FROM", projID, "IS NOW SAVED AT FULL RESOLUTION IN THE DATA DRIVE", sep = " "))
+print(paste(deployID, "FROM", projID, "IS NOW SAVED AT FULL RESOLUTION (", datFreq, "Hz) IN THE DATA DRIVE", sep = " "))
 
-load(file.path(substr(dd, 0, clip), paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep=".")))
+#load(file.path(substr(dd, 0, clip), paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep=".")))
 ########
 ###DOWNSAMPLING
 ########
