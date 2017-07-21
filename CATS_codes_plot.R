@@ -50,15 +50,31 @@ deploy_idx <- seq(min(df2$dts.local), max(df2$dts.local), by = 3*60*60)
 #open pdf
 pdf(paste(dd, "figs", paste(sppID, projID, deployID, "TagCodesPlot.pdf", sep = "_"), sep="/"))
 for(i in 1:length(deploy_idx)){
-  if(i < length(deploy_idx)) start <- deploy_idx[i]; stop <- deploy_idx[i+1] 
-  if(i == length(deploy_idx)) start = deploy_idx[i]; stop <- max(df2$dts.local);
+  if(i < length(deploy_idx)) {start <- deploy_idx[i]; stop <- deploy_idx[i+1]; }
+  print(i)
+  print(paste("start set as", start, sep = " "))
+  print(paste("stop set as", stop, sep = " "))
+  if(i == length(deploy_idx)){ start = deploy_idx[i]; stop <- max(df2$dts.local);}
+  print(i)
+  print(paste("start set as", start, sep = " "))
+  print(paste("stop set as", stop, sep = " "))
+  
   
   #subset data
   tmp <- df2[df2$dts.local >= start & df2$dts.local <= stop,]
   
   #plot
   plot(tmp$dts.local, tmp$dc_prog, type = "n", axes = F, ylim=c(-(length(levels(tmp$CamCode))+1),(length(levels(tmp$Flags))+1)), 
-       xlab = "", ylab = "", main = paste(deployID, "cam/trig codes", sep = " "))
+       xlab = "", ylab = "", main = paste(deployID, "cam/trig codes;", i, "of", length(deploy_idx), "trihour segments", sep = " "))
+  
+  #y axis labels
+  axis(side=2, at = seq((0-(length(levels(tmp$CamCode))+1)),(length(levels(tmp$Flags))+1),1), 
+       labels = c(rev(levels(tmp$CamCode)), "DC_prog", "CC.status", "trig_obs", levels(tmp$Flags)), 
+       las = 2, cex = 0.5)
+  #x axis labels
+  axis.POSIXct(side = 1, at = seq(start, stop, length.out = 6), format = "%b%d %H:%M", las = 2)
+  
+  #add data
   points(tmp$dts.local, ifelse(tmp$CC.status == "R--", 0, NA), col = '#fc8d59', pch = "|") #what recorded
   points(tmp$dts.local, ifelse(tmp$dc_prog == TRUE, -1, NA), col = '#ef6548', pch = "|") #what is programmed to record
   points(tmp$dts.local, ifelse(tmp$trig == TRUE, 1, NA), col = '#41ae76', pch = "|") #observed triggers
@@ -69,12 +85,11 @@ for(i in 1:length(deploy_idx)){
   points(tmp$dts.local, (0-(as.numeric(tmp$CamCode) + 1)), col = camcolfunc(nlevels(tmp$CamCode))[as.numeric(tmp$CamCode)], pch = "|")
   points(tmp$dts.local, (as.numeric(tmp$Flags)+1), col = flagcolfunc(nlevels(tmp$Flags))[as.numeric(tmp$Flags)], pch = "|")
   abline(h = 1.5, lty = 2); abline(h = -1.5, lty = 2)
-  #y axis labels
-  axis(side=2, at = seq((0-(length(levels(tmp$CamCode))+1)),(length(levels(tmp$Flags))+1),1), 
-       labels = c(rev(levels(tmp$CamCode)), "DC_prog", "CC.status", "trig_obs", levels(tmp$Flags)), 
-       las = 2, cex = 0.5)
-  axis.POSIXct(side = 1, at = seq(as.POSIXct(min(tmp$dts.local)), as.POSIXct(max(tmp$dts.local)), length.out = 12), format = "%b%d %H:%M", las = 2)
   
+  
+  print(paste("plot", i, "of", length(deploy_idx), "has been appended to the file", sep = " "))
+  print(paste("start was", start, sep = " "))
+  print(paste("stop was", stop, sep = " "))
 }
 #close file
 dev.off()
