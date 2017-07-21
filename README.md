@@ -7,3 +7,9 @@ July 7 Update
 -standardized CATS data uploading script is still needs to be developed; currently individualized scripts for reading in data, cleaning up (mostly depth data), and evaluating CATS trigger
 -nb.: depth is smoothed w/ a wider moving avg (i.e., filter = rep(1,5*datFreq)/(5*datFreq)); whereas VV is smoothed with a more narrow moving sum (i.e., filter = rep(1,5))
 -CATS trigger is designed to fire when the range difference over previous 1s is greater than a threshold (0.2 for most of these)
+
+July 19 update
+-standardized preprocessing script is developed & checked out into master; 
+-still needs to have ends trimming functionality!!
+-ploting (scratch) for trigger/camera sequences developed; NEEDS HELLA fine-tuning, script massaging, & plot hr by the hr
+-A

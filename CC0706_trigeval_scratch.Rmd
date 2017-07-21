@@ -1,0 +1,180 @@
+---
+title: "CATStag_0706_trigeval"
+author: "JHMoxley"
+date: "July 17, 2017"
+output: html_document
+---
+This is a document to explore and analyze the behavioral trigger functioning of CATS camera tags deployed on free swimming white sharks in South Africa.  Tags were deployed May-June 2017 and programmed to record tri-axial accelerations and depth, in addition to video.  Camera's are programmed to record via two parameters: 1) pre-determined duty cycle intervals (set as hours locally); and 2) a behavioral trigger, as determined by a threshold in depth rate/vertical velocity.  
+
+```{r setup, include=FALSE, echo = FALSE}
+###DATA READ IN
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(reshape2)
+rm(list = ls())
+
+#set up data drive & null data frame
+#dd <- "/Volumes/HELLBENDY/MBA_GWS/SOAF17_data"
+dd <- "/Volumes/UNTITLED 1/CamTag"; 
+deployID <- "CC_SA2017_0706D1"
+datFreq <- 20
+trigparam <- 0.2  #threshold defined for the trigger to fire
+
+#DATA LOAD IN
+#See 0706 scratch for data read in
+load(paste(dd, paste(deployID, datFreq, "hz.RData", sep = "_"), sep = "/"))
+
+#trim ends of deployments & index time tag on shark
+#start/stop idx determined visually on igor
+tagon <- 242030; tagoff <- 4568775
+df <- df[tagon:tagoff,]
+df$tidx <- seq(0, by = 1/datFreq, length.out = nrow(df))
+#add time index
+
+#reclass time field & add in duty cycle field
+#(tmp <- strptime(paste(df$Date..local.[1:5], df$Time..local.[1:5]), format = "%d.%m.%Y %H:%M:%OS", tz = "Africa/Johannesburg"))
+options(digits.secs = 3);
+df$dts.UTC <- strptime(paste(df$Date..UTC., df$Time..UTC.), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
+df$dts.local <- strptime(paste(df$Date..local., df$Time..local.), format = "%d.%m.%Y %H:%M:%OS", tz = "Africa/Johannesburg")
+
+#duty cycles programmed: 1000, 1200, 1500 local for an hour each (see CC_SA2017_0706D1_tagparams.jpg)
+df$d.cycle <- ifelse(hour(df$dts.local) %in% c(10, 12, 15), TRUE, FALSE)
+
+ggplot(data = df) + geom_line(aes(x = dts.local, y = d.cycle, size = 3)) + theme_bw()
+
+#subset relevant fields for trigger eval
+df2 <- dplyr::select(df, tidx, dts.local, depth, VV, VVsm, Camera, Camera.time, CC.status, Flags)
+df2$rawDEPTH <- df$Depth..100bar..1..m.
+df2$VV <- as.numeric(df2$VV)
+
+#write a 20Hz csv for igor
+#write.csv(df, file = file.path(dd, paste(deployID, datFreq, "Hz", "igor.csv", sep = "_")))
+```
+
+##Trigger Settings
+Behavioral triggers are preset to turn the camera on when a specified depth rate is exceeded.  Currently as per emails with N. Liebsch, depth rate is calculated by the difference between max and min depth values observed in recent memory (set by the time interval parameter).
+
+![Trigger settings for the deployment](/Volumes/UNTITLED 1/CamTag/CC_SA2017_0706D1/CC_SA2017_0706D1_trigparams.jpg)
+
+As seen, the camera is set to turn on when the max and min depth value over the previous minute is greater than 0.2m.  
+
+N.B. re: depth fields:  Depth was smoothed across 5 seconds during pre-processing & retained in depth col.  Raw depth data from the tag offload is retained in the rawDepth field.  Vertical Velocity (col field: VV) was calculated instaneously from adjacent depth records, additionally smoothed over 1 second in col VVsm.  
+
+```{r, echo = TRUE}
+#custom fxn for CATs trigger evaluation
+slideVVtrig <- function(data, window, step){
+  total <- length(data)
+  spots <- seq(from=1, to=total-window, by=step)
+  result <- vector(length = length(spots))
+  for(i in 1:(length(spots)-window)){
+    result[i] <- diff(range(data[spots[i]:spots[i + window]]))
+  }
+  return(c(rep(NA, window), result))  #pad front end of result where diff cannot be calc'ed
+}
+
+#emulate CATS trigger method
+df2$VVtrig <- slideVVtrig(data = df2$rawDEPTH, window = datFreq, step = 1)
+df2$trig <- ifelse(df2$VVtrig > 0.2, TRUE, FALSE)
+
+trig_prop <- sum(df2$trig, na.rm = TRUE)/nrow(df2)
+```
+
+Using raw depth data and the trigger algorithm, `r round(trig_prop, 5)*100` percent of the data record fulfills the trigger setting.  
+
+## Depth trace
+
+
+```{r pressure, echo=FALSE}
+####SCRATCH CODING SMALLER SUBSET
+sc <- df2[3000000:3500000,]
+#sc$tidx <- seq(0, by = 1/datFreq, length.out = nrow(sc))
+
+#depth trace.. ATTEMPT W/ BASEPLOT
+dev.new()
+plot(sc$depth ~ sc$tidx, type = "n")
+for(i in 2:nrow(sc)){
+  segments(y0 = sc$depth[i-1], y1 = sc$depth[i], x0 = sc$tidx[i-1], x1 = sc$tidx[i], col = rainbow(sc$VV[i]))
+}
+
+dev.new()
+p <- ggplot(sc, aes(y = rawDEPTH, x=tidx)) +
+  geom_vline(xintercept = filter(sc, Camera %in% c(10, 11, 12, 13, 14))$tidx, color = "pink", alpha = 0.1) + 
+  geom_line(aes(col = abs(VVsm))) +
+  scale_color_gradient(low = "blue",high = "red")
+p + geom_vline(xintercept = filter(sc, c(FALSE, diff(trig)) == 1)$tidx, linetype = "dotted") + labs(title = paste(deployID, "depth trace w/ camera (pink) & trigger (dotted) events"))
+#plot only the first instance of the trigger firing
+dev.off()
+
+#looking into sequences of trigger values
+trig_seqs <- data.frame(runlength = rle(sc$trig)$lengths, trig_val = rle(sc$trig)$values); trig_seqs$idx <- seq(1, length.out = nrow(trig_seqs))
+#map run lengths back into full df
+sc$trig_len <- rep(trig_seqs$runlength, times = trig_seqs$runlength)
+
+dev.new()
+ggplot(data = trig_seqs) + geom_histogram(aes(runlength, fill = trig_val)) + facet_wrap(~trig_val, scales = "free") + labs(title = "sequences of fulfilled trigger values are typically less than 50 records long")
+dev.off()
+
+ggplot(data = sc) + geom_histogram(aes(trig_len, fill = Flags, colour = CC.status)) + facet_wrap(~trig, scales = "free") + labs(title = "Trigger flags (-T-) during behavioral/trigger sequences of increasing length")
+
+ggplot(data = trig_seqs) + geom_col(data = trig_seqs, aes(y = ifelse(trig_val == TRUE, runlength,-runlength), x = idx, fill = trig_val)) + ylim(-250, 100)
+```
+Trigger values are being fulfilled frequently throughout the data record.  However, behavioral sequences that fulfill trigger settings consistently are relatively brief (<50 records typically.. which is a few seconds at this resolution).
+
+###Stacked behavioral sequence plotting
+Here I plot the data streams [VARS HERE] in a stacked line plots to show the sequence of different events in the tag's programming
+```{r, echo = FALSE}
+#downsample to 5Hz
+df3 <- df[seq(1, nrow(df), by = 4),]; datFreq = 5 #Hz
+
+df3 <- select(df3, dts.UTC, tidx, dts.local, d.cycle, depth, Depth..100bar..1..m., VV, VVsm, Camera, Camera.time, CC.status, Flags)
+#simulate CATS trigger method
+colnames(df3)[6] <- "rawDEPTH"
+df3$VVtrig <- slideVVtrig(data = df3$rawDEPTH, window = datFreq, step = 1)
+df3$trig <- ifelse(df3$VVtrig > 0.2, TRUE, FALSE)
+
+#track/catalogue events in time series
+df4 <- data.frame(NA)
+df4 <- select(df3, tidx, dts.local)
+df4$dc_prog <- ifelse(hour(df4$dts.local) %in% c(10, 12, 15), 1, NA)
+df4$VVtrig_expc <- ifelse(df3$VVtrig >= trigparam, 3, NA)
+df4$CC.status <- ifelse(df3$CC.status == "R--", 2, NA)
+#NEEDS SOME METRIC HERE OF WHEN THE CAMERA WAS ACTUALLY On
+
+#Cam fields
+#unique(df$Camera)
+df4$cam10 <- ifelse(df3$Camera == 10, -1, NA)
+df4$cam11 <- ifelse(df3$Camera == 11, -2, NA)
+df4$cam12 <- ifelse(df3$Camera == 12, -3, NA)
+df4$cam13 <- ifelse(df3$Camera == 13, -4, NA)
+df4$cam14 <- ifelse(df3$Camera == 14, -5, NA)
+df4$cam20s <- ifelse(df3$Camera >= 20 & df3$Camera <= 30, -6, NA)
+df4$cam90s <- ifelse(df3$Camera >= 90, -7, NA)
+
+#Trigger fields
+#unique(df$Flags)
+df4$.T. <- ifelse(df3$Flags == "-T-", 4, NA)
+df4$.TS <- ifelse(df3$Flags == "-TS", 5, NA)
+df4$PTS <- ifelse(df3$Flags == "PTS", 6, NA)
+df4$..S <- ifelse(df3$Flags == "--S", 7, NA)
+df4$P.. <- ifelse(df3$Flags == "P--", 8, NA)
+
+
+#plot
+quartz()
+plot(df4$dts.local, df4$dc_prog, col = "white", axes = FALSE, ylim = c(-7,8), xlab = "", ylab = "", main = "0706D1 camera/trigger codes")
+points(df4$dts.local, as.numeric(df4$VVtrig_expc), col = "green")
+points(df4$dts.local, as.numeric(df4$dc_prog), col = "pink")
+points(df4$dts.local, as.numeric(df4$CC.status), col = "red")
+#add camera codes
+points(df4$dts.local, df4$cam10, col = "slateblue"); points(df4$dts.local, df4$cam11, col = "skyblue"); points(df4$dts.local, df4$cam12, col = "royalblue"); points(df4$dts.local, df4$cam13, col = "steelblue"); points(df4$dts.local, df4$cam14, col = "turquoise"); points(df4$dts.local, df4$cam20s, col = "tan"); points(df4$dts.local, df4$cam90s, col = "tomato")
+#add triger codes
+points(df4$dts.local, df4$.T., col = "seagreen"); points(df4$dts.local, df4$.TS, col = "palegreen"); points(df4$dts.local, df4$PTS, col = "olivedrab2"); points(df4$dts.local, df4$..S, col = "khaki"); points(df4$dts.local, df4$P.., col = "lavender")
+abline(h = 3.5, lty = 2); abline(h = -0.5, lty = 2)
+#y axis labels
+axis(side=2, at = seq(-7,8,1), labels =  c("CC Err", "CC BD", "CC Rec", 
+      "CC BU13", "CC BU12", "CC BU11", "CC BU10",  "", "DC programmed", "CC.Status", "VV > trig", 
+      "-T-", "-TS", "PTS", "--S", "P--"), las = 2, cex = 0.5)
+axis.POSIXct(side = 1, at = seq(as.POSIXct(min(df4$dts.local)), as.POSIXct(max(df4$dts.local)), length.out = 12), format = "%b%d %H:%M", las = 2)
+
+```
