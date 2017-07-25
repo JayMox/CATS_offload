@@ -5,6 +5,7 @@
 #prep workbench
 #prep workbench
 rm(list = ls())
+options(digits.secs = 3);
 library(dplyr)
 library(lubridate)
 library(RColorBrewer)
@@ -17,18 +18,16 @@ dd <- "/Volumes/UNTITLED 1/CamTag/SA2017_raw"; clip = 26
 
 #get data
 sppID <- "CC"
-deployID <- "0704D1"
+deployID <- "0706D2"
 projID <- "SA2017"
 datFreq = 5
 #load in
 load(file.path(substr(dd, 0, clip), paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep = ".")))
 
-#add in duty cycling
-#dc.prog <- c(7:8, 10:12, 14:16)
-#df$dc_prog <- ifelse(hour(df$dts.local) %in% dc.prog, TRUE, FALSE)
 
 #subset to fields of interest
-df2 <- select(df, dts.local, Flags, trig, CC.status, dc_prog, Camera)
+df2 <- select(df, dts.local, dts.UTC, rawDEPTH, depth, Flags, trig, CC.status, dc_prog, Camera)
+rm(list = "df") #save some space
 df2$CamCode <- factor(df2$Camera)
 levels(df2$CamCode) = list("BU10" = "10", "BU11" = "11", "BU12" = "12", "BU13" ="13", "rec14" = "14", 
                   "BD20" = "20", "BD21" ="21", "BD22" = "22", "BD23" = "23", "BD24" = "24", "BD25" ="25", 
@@ -40,6 +39,7 @@ levels(df2$CamCode) = list("BU10" = "10", "BU11" = "11", "BU12" = "12", "BU13" =
 df2$Flags <- factor(ifelse(as.character(df2$Flags) == "---", NA, as.character(df2$Flags)), 
              levels <- c("-T-", "-TS", "PTS", "--S", "P--"))
             #remove blank reading, "---", for plotting
+
 
 ###########
 #plot
