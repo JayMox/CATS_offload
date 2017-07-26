@@ -40,6 +40,11 @@ df2$Flags <- factor(ifelse(as.character(df2$Flags) == "---", NA, as.character(df
              levels <- c("-T-", "-TS", "PTS", "--S", "P--"))
             #remove blank reading, "---", for plotting
 
+######
+#FURTHER DOWNSAMPLING
+#subsample to 0.5Hz
+df2 <- df2[seq(1, nrow(df2), by = datFreq/0.5),]; 
+datFreq = round(1/as.numeric(diff(head(df3$dts.UTC, 2))), 2)
 
 ###########
 #plot
