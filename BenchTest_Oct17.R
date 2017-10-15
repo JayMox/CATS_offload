@@ -10,34 +10,28 @@ library(lubridate)
 #set working drive to git repo
 wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"
 #set up data drive, 
-dd <- "/Volumes/UNTITLED/CamTag/CA2017_raw"; clip = 24; substr(dd, 0, clip)
+dd <- "/Volumes/LACIE SHARE/TagSoftware/CalTest_Oct17"; clip = 24; substr(dd, 0, clip)
 
 ###########
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 ###########
-deployID <- "0707D1"
-projID <- "CA2017"
-locTZ <- "America/Los_Angeles"
-sppID <- "CC"
+#deployID <- "0707D1"
+#projID <- "CA2017"
+#locTZ <- "America/Los_Angeles"
+#sppID <- "CC"
 datFreq.desired <- 1 #Hz
-dc.prog <- c(16,21,22) #hours in local time
-trig.thresh <- 3/3 #m/s
+dc.prog <- c(seq(0,24,2)) #hours in local time
+#trig.thresh <- 3/3 #m/s
 ###############
 
-#data load in
-setwd(file.path(dd, paste(sppID, projID, deployID, sep="_")))
-temp <- list.files(pattern="*.csv")
-dat <- lapply(temp, read.csv, fileEncoding = "latin1")
-setwd(wd) #remap to git drive
-#build df
-df <- data.frame()
-df <- do.call('rbind', dat)
+df <- read.csv(file = file.path(dd, "20171013-141657-CC_7_07_D1_CA2017.csv"), header=T, fileEncoding = "UTF-8")
+df <- read.csv(file = "/Users/jmoxley/Desktop/20171013-141657-CC_7_07_D1_CA2017.csv", header=T, stringsAsFactors = F)
 
 #build timestamps & sampling frequency
 options(digits.secs = 3);
-df$dts.UTC <- strptime(paste(df$Date..UTC., df$Time..UTC.), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
-df$dts.local <- strptime(paste(df$Date..local., df$Time..local.), format = "%d.%m.%Y %H:%M:%OS", tz = locTZ)
-datFreq <- round(1/as.numeric(diff(head(df$dts.UTC, 2))), 2);
+df$dts.UTC <- strptime(paste(df$Date..UTC., df$Time..UTC.), format = "%d.%m.%Y %H:%M.%OS", tz = "UTC")
+#df$dts.local <- strptime(paste(df$Date..local., df$Time..local.), format = "%d.%m.%Y %H:%M:%OS", tz = locTZ)
+datFreq <- 20;
 
 print(paste("TAG DEPLOYMENT IS FROM", as.Date(min(df$dts.local)), "TO", as.Date(max(df$dts.local)), sep = " "))
 print(paste("DATA RECORD DURATION IS", round(difftime(max(df$dts.UTC), min(df$dts.UTC), units = "hours"), 4), "HOURS LONG", sep = " "))
