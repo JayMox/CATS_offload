@@ -14,11 +14,11 @@ library(RColorBrewer)
 wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"
 setwd(wd)
 #set up data drive, 
-dd <- "/Volumes/UNTITLED/CamTag/CA2017_raw"; clip = 24
+dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 24
 
 #get data
 sppID <- "CC"
-deployID <- "0705D1"
+deployID <- "0705D2"
 projID <- "CA2017"
 datFreq = 1
 #load in
@@ -42,8 +42,8 @@ df2$Flags <- factor(ifelse(as.character(df2$Flags) == "---", NA, as.character(df
 ######
 #FURTHER DOWNSAMPLING
 #subsample to 0.5Hz
-df2 <- df2[seq(1, nrow(df2), by = datFreq/0.5),]; 
-datFreq = round(1/as.numeric(diff(head(df2$dts.UTC, 2))), 2)
+#df2 <- df2[seq(1, nrow(df2), by = datFreq/0.5),]; 
+#datFreq = round(1/as.numeric(diff(head(df2$dts.UTC, 2))), 2)
 
 ###########
 #plot

@@ -6,6 +6,7 @@
 rm(list = ls())
 library(dplyr)
 library(lubridate)
+library(gRumble)
 
 #set working drive to git repo
 wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"
