@@ -11,7 +11,7 @@ library(gRumble)
 source('tag_fxns.R')
 
 #set working drive to git repo
-wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"
+wd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags"
 #set up data drive, 
 dd <- "/Volumes/UNTITLED/CamTag/CA2017_raw"; clip = 24; substr(dd, 0, clip)
 
