@@ -9,6 +9,7 @@ options(digits.secs = 3);
 library(dplyr)
 library(lubridate)
 library(RColorBrewer)
+source('tag_fxns.R')
 
 #set working drive to git repo
 wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"

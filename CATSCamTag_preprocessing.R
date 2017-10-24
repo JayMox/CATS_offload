@@ -4,9 +4,11 @@
 
 #prep workbench
 rm(list = ls())
+options(digits.secs = 3);
 library(dplyr)
 library(lubridate)
 library(gRumble)
+source('tag_fxns.R')
 
 #set working drive to git repo
 wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"
@@ -16,28 +18,20 @@ dd <- "/Volumes/UNTITLED/CamTag/CA2017_raw"; clip = 24; substr(dd, 0, clip)
 ###########
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 ###########
-deployID <- "0707D1"
+deployID <- "0705D2"
 projID <- "CA2017"
-locTZ <- "America/Los_Angeles"
+locTZ <- "UTC"     #ie. +0 hr offset
 sppID <- "CC"
+dts_tagon <- NA
 datFreq.desired <- 1 #Hz
 dc.prog <- c(16,21,22) #hours in local time
 trig.thresh <- 3/3 #m/s
 ###############
 
 #data load in
-setwd(file.path(dd, paste(sppID, projID, deployID, sep="_")))
-temp <- list.files(pattern="*.csv")
-dat <- lapply(temp, read.csv, fileEncoding = "latin1")
-setwd(wd) #remap to git drive
-#build df
-df <- data.frame()
-df <- do.call('rbind', dat)
+df <- load.in(dd, sppID, projID, deployID, stringsAsF = F)
 
 #build timestamps & sampling frequency
-options(digits.secs = 3);
-df$dts.UTC <- strptime(paste(df$Date..UTC., df$Time..UTC.), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
-df$dts.local <- strptime(paste(df$Date..local., df$Time..local.), format = "%d.%m.%Y %H:%M:%OS", tz = locTZ)
 datFreq <- round(1/as.numeric(diff(head(df$dts.UTC, 2))), 2);
 
 print(paste("TAG DEPLOYMENT IS FROM", as.Date(min(df$dts.local)), "TO", as.Date(max(df$dts.local)), sep = " "))
