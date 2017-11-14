@@ -1,13 +1,7 @@
 #Tag processing script for Zac's NN modeling manuscript
 
-rm(ls = ())
-Mode <- function(x){
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x,ux)))]
-}
-
-#library(dplyr)
 library(gRumble)
+source('tag_fxns.R')
 
 #set data drive & folders w data
 d.dir <- "/Users/jhmoxley/Documents/Biologia & Animales/[[SharkTank]]/data_for_Biologgingwork/Neral_network_datasets_Zac"
@@ -24,8 +18,8 @@ d.dir <- "/Users/jhmoxley/Documents/Biologia & Animales/[[SharkTank]]/data_for_B
 #Scratchy fix w/ substr()
 #N.B.  THIS CATS DATASET HAS AN EXTRA 0 PRECEEDING THE MILLISECONDS AS WELL
 
-deployment <- "CC_2_24_PR161108"
-fn <- "CC-2-24_PR161108_PR16110703"
+#deployment <- "CC_2_24_PR161108"
+#fn <- "CC-2-24_PR161108_PR16110703"
 datFreq.desired <- 1 #Hz
 
 df <- read.csv(file.path(d.dir, deployment, paste(fn,".csv",sep="")), stringsAsFactors = F)
