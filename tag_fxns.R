@@ -106,8 +106,8 @@ eda.plot <- function(df2){
   lines(df2$dts.UTC, df2$depth, col = "#0570b0", type = "l", xlab = "", ylab = "depth")
   axis(side = 2, cex = 0.5, las = 2)
   #choose one of the other x-axis labelers
-  #axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 3*60*60), labels = FALSE)
-  axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 60), labels = FALSE)
+  axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 3*60*60), labels = FALSE)
+  #axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 60), labels = FALSE)
   #axis.POSIXct(side = 1, at = seq(min(df2$dts.local), max(df2$dts.local), by = 3*60*60), format = "%b%d %H:%M", las = 2)
   #plot
   par(mar=c(6.1, 5.1, 1, 2.1))

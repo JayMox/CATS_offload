@@ -13,69 +13,47 @@ source('tag_fxns.R')
 #set working drive to git repo
 wd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags"
 #set up data drive, 
-dd <- "/Volumes/UNTITLED/CamTag/CA2017_raw"; clip = 24; substr(dd, 0, clip)
+dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 26; substr(dd, 0, clip)
 
 ###########
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 ###########
-deployID <- "0705D2"
+deployID <- "0704D3"
 projID <- "CA2017"
 locTZ <- "UTC"     #ie. +0 hr offset
 sppID <- "CC"
 dts_tagon <- NA
 datFreq.desired <- 1 #Hz
-dc.prog <- c(16,21,22) #hours in local time
+dc.prog <- c(14,17,19,22) #hours in local time
 trig.thresh <- 3/3 #m/s
 ###############
 
 #data load in
-df <- load.in(dd, sppID, projID, deployID, stringsAsF = F)
-
-#build timestamps & sampling frequency
-datFreq <- round(1/as.numeric(diff(head(df$dts.UTC, 2))), 2);
-
-print(paste("TAG DEPLOYMENT IS FROM", as.Date(min(df$dts.local)), "TO", as.Date(max(df$dts.local)), sep = " "))
-print(paste("DATA RECORD DURATION IS", round(difftime(max(df$dts.UTC), min(df$dts.UTC), units = "hours"), 4), "HOURS LONG", sep = " "))
-print(paste("SAMPLING FREQUENCY IS", datFreq, "Hz", sep = " "))
-
-###########
-##RENAMING
-###########
-#rename columns
-df <- rename(df, rawDEPTH = Depth..100bar..1..m.)
-
+df <- load.in(dd, sppID, projID, deployID, stringsAsF = F, 
+              dsmooth=T, camcodify=T, trigify=T)
+#########
+##Set Sampling Freq
+#########
+datFreq <- sFreq(df$dts.UTC, 100);
 #########
 ##Duty Cycling
 #########
-df$dc_prog <- ifelse(hour(df$dts.local) %in% dc.prog, TRUE, FALSE)
-
-########
-###SMOOTHING
+df$dc_prog <- ifelse(hour(df$dts.UTC) %in% dc.prog, TRUE, FALSE)
 #########
-#smooth depth trace over 5 secs w/ a moving avg
-df$depth <- stats::filter(df[,15], filter = rep(1,5*datFreq)/(5*datFreq), sides = 2, circular = T)
-df$VV <- c(0, diff(df$depth))
-df$VV <- stats::filter(df$VV, filter = rep(1,1*datFreq), sides = 2, circular = T) #smooth VV over 1s
-
-########
-###CATS Trigger Simulation
-########
-#find range diffs with a sliding window, a la CATS trigger methods
-slideVVtrig <- function(data, window, step){
-  total <- length(data)
-  spots <- seq(from=1, to=total-window, by=step)
-  result <- vector(length = length(spots))
-  for(i in 1:(length(spots)-window)){
-    result[i] <- diff(range(data[spots[i]:spots[i + window]]))
-  }
-  return(c(rep(NA, window), result))  #pad front end of result where diff cannot be calc'ed
-}
-df$trig <- ifelse(slideVVtrig(data = df$rawDEPTH, window = datFreq, step = 1)>=trig.thresh, TRUE, FALSE)
+##Post-processed depth-differentials
+#########
+df$trig <- ifelse(slide.window(data=df$rawDEPTH, window = datFreq*3, step = 1) >= trig.thresh,
+                  TRUE, FALSE)
 
 ##Save full dataset
 save(df, file = file.path(substr(dd, 0, clip), 
                           paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep=".")))
 print(paste(deployID, "FROM", projID, "IS NOW SAVED AT FULL RESOLUTION (", datFreq, "Hz) IN THE DATA DRIVE", sep = " "))
+#write csv for igor
+#write.csv(df, file = file.path(substr(dd, 0, clip), 
+#                              paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "csv")))
+
+eda.plot(df)
 
 #load(file.path(substr(dd, 0, clip), paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep=".")))
 ########
