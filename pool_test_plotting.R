@@ -17,11 +17,11 @@ dd <- "/Volumes/UNTITLED 1/CamTag/PoolTests_MBARI2017"
 
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 sppID <- "CC"
-projID <- "0707pt"
-deployID <- "d25"
+projID <- "0704bt"
+deployID <- "CA2017"
 locTZ <- "UTC"     #ie. +0 hr offset
 datFreq.desired <- 1 #Hz
-dc.prog <- c(1,3,8) #hours in local time
+dc.prog <- c(14,17, 19, 21, 23) #hours in local time
 trig.thresh <- 3/3 #m/s
 ###############
 
@@ -34,9 +34,8 @@ df$trig <- ifelse(slide.window(data=df$rawDEPTH, window = datFreq*3, step = 1) >
                   TRUE, FALSE)
 
 #0707pt_d26 records 1/2 minute of data at 10.12.2017??!
-if(projID == "0707pt" & deployID == "d25"){
-  df <- df[which(df$dts.UTC >= as.POSIXct("2017-10-20", tz = "UTC")),]
-}
+
+#  df <- df[which(df$dts.UTC >= as.POSIXct("2017-10-24 12:00:00", tz = "UTC")),] 
 
 #plot
 pdf(file = paste(dd, paste(sppID, projID, deployID, "TagCodesPlot.pdf", sep = "_"), sep="/"))
