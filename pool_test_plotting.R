@@ -16,12 +16,12 @@ wd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags"
 dd <- "/Volumes/UNTITLED 1/CamTag/PoolTests_MBARI2017"
 
 ###SET DEPLOYMENT & PARAMETER SETTINGS
-sppID <- "CC"
+sppID <- "PT"
 projID <- "0707pt"
-deployID <- "d25"
+deployID <- "d37"
 locTZ <- "UTC"     #ie. +0 hr offset
 datFreq.desired <- 1 #Hz
-dc.prog <- c(1,3,8) #hours in local time
+dc.prog <- c(21, 23) #hours in local time
 trig.thresh <- 3/3 #m/s
 ###############
 
@@ -32,6 +32,8 @@ df$dc_prog <- ifelse(hour(df$dts.UTC) %in% dc.prog, TRUE, FALSE)
 #use rawDEPTH since this is what is available to tag
 df$trig <- ifelse(slide.window(data=df$rawDEPTH, window = datFreq*3, step = 1) >= trig.thresh,
                   TRUE, FALSE)
+
+eda.plot(df)
 
 #0707pt_d26 records 1/2 minute of data at 10.12.2017??!
 if(projID == "0707pt" & deployID == "d25"){
