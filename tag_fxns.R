@@ -106,7 +106,7 @@ eda.plot <- function(df2){
   lines(df2$dts.UTC, df2$depth, col = "#0570b0", type = "l", xlab = "", ylab = "depth")
   axis(side = 2, cex = 0.5, las = 2)
   #choose one of the other x-axis labelers
-  axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 3*60*60), labels = FALSE)
+  axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 6*60*60), labels = FALSE)
   #axis(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 60), labels = FALSE)
   #axis.POSIXct(side = 1, at = seq(min(df2$dts.local), max(df2$dts.local), by = 3*60*60), format = "%b%d %H:%M", las = 2)
   #plot
@@ -118,8 +118,8 @@ eda.plot <- function(df2){
        labels = c(rev(levels(df2$CamCode)), "DC_prog", "CC.status", "trig_obs", levels(df2$Flags)), 
        las = 2, cex = 0.5)
   #x axis labels ***choose one or the other labeler
-  #axis.POSIXct(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 3*60*60), format = "%b%d %H:%M", las = 2)
-  axis.POSIXct(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 60), format = "%b%d %H:%M", las = 2)
+  axis.POSIXct(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 3*60*60), format = "%b%d %H:%M", las = 2)
+  #axis.POSIXct(side = 1, at = seq(min(df2$dts.UTC), max(df2$dts.UTC), by = 60), format = "%b%d %H:%M", las = 2)
   #add data
   points(df2$dts.UTC, ifelse(df2$CC.status == "R--", 0, NA), col = '#fc8d59', pch = 3) #what recorded
   points(df2$dts.UTC, ifelse(df2$dc_prog == TRUE, -1, NA), col = '#ef6548', pch = 3) #what is programmed to record

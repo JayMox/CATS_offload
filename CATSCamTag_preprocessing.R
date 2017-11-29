@@ -18,7 +18,7 @@ dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 26; substr(dd, 0, clip)
 ###########
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 ###########
-deployID <- "0704D3"
+deployID <- "0704D2"
 projID <- "CA2017"
 locTZ <- "UTC"     #ie. +0 hr offset
 sppID <- "CC"
@@ -51,7 +51,7 @@ save(df, file = file.path(substr(dd, 0, clip),
 print(paste(deployID, "FROM", projID, "IS NOW SAVED AT FULL RESOLUTION (", datFreq, "Hz) IN THE DATA DRIVE", sep = " "))
 #write csv for igor
 #write.csv(df, file = file.path(substr(dd, 0, clip), 
-#                              paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "csv")))
+#                             paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), ".csv", sep="")))
 
 eda.plot(df)
 
