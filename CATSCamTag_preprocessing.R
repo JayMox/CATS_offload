@@ -18,7 +18,7 @@ dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 26; substr(dd, 0, clip)
 ###########
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 ###########
-deployID <- "0704D2"
+deployID <- "0704D3"
 projID <- "CA2017"
 locTZ <- "UTC"     #ie. +0 hr offset
 sppID <- "CC"

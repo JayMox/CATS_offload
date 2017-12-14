@@ -19,7 +19,7 @@ dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 24
 
 #get data
 sppID <- "CC"
-deployID <- "0705D2"
+deployID <- "0704D3"
 projID <- "CA2017"
 datFreq = 1
 #load in
