@@ -15,15 +15,17 @@ source('tag_fxns.R')
 wd <- "/Users/jmoxley/Documents/MBA_GWS/GitTank/CC_CamTags"
 setwd(wd)
 #set up data drive, 
-dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 24
+dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 26
 
 #get data
 sppID <- "CC"
-deployID <- "0704D3"
+deployID <- "0704D1"
 projID <- "CA2017"
 datFreq = 1
 #load in
 load(file.path(substr(dd, 0, clip), paste(paste(sppID, projID, deployID, datFreq, "Hz", sep = "_"), "Rdata", sep = ".")))
+#match UTC & local time
+df$dts.local <- df$dts.UTC
 
 #subset to fields of interest
 df2 <- select(df, dts.local, dts.UTC, rawDEPTH, depth, Flags, trig, CC.status, dc_prog, Camera)
