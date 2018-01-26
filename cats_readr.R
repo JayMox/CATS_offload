@@ -18,8 +18,10 @@ lst <- list(txt, txt2, txt3); lst %>% map(dim)
 
 info <- list(NULL)
 str_extract_all(sapply(txt, "as.character"), "sn") %>% filter(. != "Character,0")
-matrix(unlist(strsplit(txt, "=")), ncol = 2, byrow = T)  #issues with the header names
-txt[str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")]
+matrix(unlist(strsplit(txt[!str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")], "(?<=\\S)\\=")), 
+       ncol = 2, byrow = T)  #works but needs to be split on '=' w/ no pre/postceeding white space
+
+#map on variable headers (e.g., logging, etc.)
 
 
 a
