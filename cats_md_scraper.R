@@ -3,25 +3,19 @@
 #maybe be duplicated effort of TagTools > read_cats() & read_cats_csv()
 #see here: https://github.com/stacyderuiter/TagTools/blob/master/matlab/read_write/read_cats.m
 #& here: https://github.com/stacyderuiter/TagTools/blob/master/matlab/read_write/read_cats_csv.m
+rm(list = ls())
+library(tidyverse)
 
 dir <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/logs"
 depid <- "TOM_CC0705_20171005"
 #find info file; formats capable .txt or .cfg
 (files <- list.files(dir, pattern=("*.txt|CFG"),full.names = T))
 
-#2017 info harvesting, read in as character strings for regex
+#2017 metadata scraping, read in as character strings for regex
 txt <- sapply(read.delim(files[1]), "as.character")
-txt2 <- sapply(read.delim(files[2]), "as.character")
-txt3 <- sapply(read.delim(files[3]), "as.character")
-lst <- list(txt, txt2, txt3); lst %>% map(dim)
-#
-
-info <- list(NULL)
-str_extract_all(sapply(txt, "as.character"), "sn") %>% filter(. != "Character,0")
-matrix(unlist(strsplit(txt[!str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")], "(?<=\\S)\\=")), 
-       ncol = 2, byrow = T)  #works but needs to be split on '=' w/ no pre/postceeding white space
-
-#map on variable headers (e.g., logging, etc.)
+#get field categories & delimit field names from field values
+labels <- c("[general]", txt[which(str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]"))])
+fields <- data.frame(str_split(txt, "\\=", n = 2, simplify = T)) %>% #split names & fields
+  mutate(labels = labels[findInterval(seq(1:nrow(txt)), which(str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")))+1])
 
 
-a

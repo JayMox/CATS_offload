@@ -11,22 +11,23 @@ library(gRumble)
 source('tag_fxns.R')
 
 #set working drive to git repo
-wd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags"
-#set up data drive, 
-dd <- "/Volumes/UNTITLED 1/CamTag/CA2017_raw"; clip = 26; substr(dd, 0, clip)
+wd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags"; setwd(wd)
 
 ###########
 ###SET DEPLOYMENT & PARAMETER SETTINGS
 ###########
-deployID <- "0704D3"
+deployID <- "0705D2"
 projID <- "CA2017"
 locTZ <- "UTC"     #ie. +0 hr offset
+utc.offset <- 1#hr 
 sppID <- "CC"
 dts_tagon <- NA
 datFreq.desired <- 1 #Hz
-dc.prog <- c(14,17,19,22) #hours in local time
+dc.prog <- vector(14,17,19,22) #hours in local time
 trig.thresh <- 3/3 #m/s
 ###############
+#set up data drive, 
+dd <- paste("/Volumes/UNTITLED 1/CamTag/", projID, sep ="/"); clip = 26; substr(dd, 0, clip)
 
 #data load in
 df <- load.in(dd, sppID, projID, deployID, stringsAsF = F, 

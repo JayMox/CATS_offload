@@ -72,6 +72,7 @@ load.in <- function(dd, sppID, projID, deployID, stringsAsF, dsmooth, camcodify,
   
   #return data
   return(df)
+  plot(df$dts.UTC, df$rawDEPTH, type = "l")
 }
 
 #function to calculate the modal sampling frequency of a tag dataset
