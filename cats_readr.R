@@ -22,3 +22,4 @@ matrix(unlist(strsplit(txt, "=")), ncol = 2, byrow = T)  #issues with the header
 txt[str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")]
 
 
+a
