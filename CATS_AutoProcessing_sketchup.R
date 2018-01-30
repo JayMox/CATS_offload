@@ -36,18 +36,9 @@ if(dir.exists(rawdir)){
 ######################
 
 #sketch up code w/ pressure sensor, evaluate possibly looping through sensor list & colnames to determine what conversions are necessary
-data.frame(cbind(str_split(str_replace(colnames(df), "\\.$", ""), "\\.{2}", n = 2, simplify = T), colnames(df), 
-                 key = ), stringsAsFactors = F)
-sc <- data.frame(name = str_split(colnames(df), "\\.{3,}", simplify = T)[,1], 
-                 channel = str_split(colnames(df), "\\.{3,}", simplify = T)[,2], 
-                 key = str_sub(colnames(df), 1,4),colnames(df))
-
 test <- full_join(data.frame(name = str_split(colnames(df), "\\.{3,}", simplify = T)[,1], 
                              channel = str_split(colnames(df), "\\.{3,}", simplify = T)[,2], 
                              key = str_sub(colnames(df), 1,4),colnames(df)), sens, by = "key")
-  
-  sens, data.frame(name = str_split(colnames(df), "\\.{3,}", simplify = T)[,1], 
-                                    channel = str_split(colnames(df), "\\.{3,}", simplify = T)[,2], colnames = colnames(df)), by=c("name"))
 
 cols <- bind_rows(cols, test)
 
