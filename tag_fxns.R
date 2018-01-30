@@ -31,7 +31,10 @@ get.metadata <- function(depid, dir = NA){
   (files <- list.files(dir, pattern=("*.txt|CFG"),full.names = T))
   ifelse(length(files) > 1, print("more than 1 txt file in raw data drive"), print("scraping 1 txt file in dir provided"))
   #metadata scraping, read in as character strings for regex
-  txt <- sapply(read.delim(files), "as.character")
+  txt <- rbind(paste("sourcedir=", str_split(rawdir, "tag_data_raw", simplify = T)[1], sep=""), 
+               paste("sourcepath=", paste("/tag_data_raw",str_split(rawdir, "tag_data_raw", simplify = T)[2],sep=""),sep=""),
+               paste("deployID=", deployID, sep = ""), 
+               sapply(read.delim(files), "as.character"))
   
   #get field categories & delimit field names from field values
   labels <- c("[global]", txt[which(str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]"))])
@@ -48,6 +51,7 @@ get.metadata <- function(depid, dir = NA){
   #index sensors
   fields <- fields %>% mutate(sensor = ifelse(str_detect(class, "sensor"), str_extract(field, "[:digit:]{2}"), NA),
                               active = ifelse(str_detect(class, "sensor"), str_trim(substr(class, 2, str_locate(class, "\\s")[,1]), "right"), NA))
+  
   return(fields)
 }
 
