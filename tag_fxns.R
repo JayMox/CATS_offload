@@ -27,28 +27,27 @@ get.metadata <- function(depid, dir = NA){
   }
   
   require(dplyr); require(stringr);
-  #dir <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/logs"
-  #depid <- "TOM_CC0705_20171005"
   #find info file; formats capable .txt or .cfg
   (files <- list.files(dir, pattern=("*.txt|CFG"),full.names = T))
-  if(length(files) > 1){print("too many txt files in raw data drive")
-    return()}
-  #2017 metadata scraping, read in as character strings for regex
+  ifelse(length(files) > 1, print("more than 1 txt file in raw data drive"), print("scraping 1 txt file in dir provided"))
+  #metadata scraping, read in as character strings for regex
   txt <- sapply(read.delim(files), "as.character")
+  
   #get field categories & delimit field names from field values
   labels <- c("[global]", txt[which(str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]"))])
   fields <- data.frame(str_split(txt, "\\=", n = 2, simplify = T)) %>% #split names & fields
     rename(field = X1, value = X2) %>% 
     mutate(class = labels[findInterval(seq(1:nrow(txt)), which(str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")))+1]) %>% 
     filter(!(str_detect(txt, "\\[[:alpha:]*[:space:]?[:alpha:]*?\\]")))
+  
   #parse video trigger field in old gen tags that doesn't mine well
   idx <- str_detect(fields$field, "rawon")
   fields <- fields %>% mutate(field = ifelse(idx, str_replace(field, " rawon", ""), as.character(field)),
                               value = ifelse(idx, str_c("rawon=", value), as.character(value)))
-  
+
   #index sensors
-  fields %>% mutate(sensor = ifelse(str_detect(class, "sensor"), str_extract(field, "[:digit:]{2}"), NA),
-                    active = ifelse(str_detect(class, "sensor"), substr(class, 2, str_locate(class, "\\s")[,1]), NA))
+  fields <- fields %>% mutate(sensor = ifelse(str_detect(class, "sensor"), str_extract(field, "[:digit:]{2}"), NA),
+                              active = ifelse(str_detect(class, "sensor"), str_trim(substr(class, 2, str_locate(class, "\\s")[,1]), "right"), NA))
   return(fields)
 }
 
