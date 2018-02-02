@@ -1,4 +1,4 @@
-# 
+# TG wrote initial script
 library(ggplot2)
 library(plotly)
 library(DescTools)
@@ -61,7 +61,7 @@ MANY_LOESS <-
       LAND_LOESS_DF <- cbind(LAND_LOESS_DF,loess_vec)
     }
     
-    LAND_long <- melt(LAND_LOESS_DF, id = "mean")
+    LAND_long <- reshape::melt(LAND_LOESS_DF, id = "mean")
     point_sample <- sample_frac(data_l,FRAC)
     xp <- point_sample[,predictor]
     yp <- point_sample[,response]
@@ -128,12 +128,14 @@ AUCpred <- AUC(x,y_pred)
 # two evaluation metrics, metric 1 appears sensitive to the magnitude of the AUC
 metric1 <- 1- ( abs( AUCobs - AUCpred )/ low_win[i] )
 metric2 <- ifelse(AUCobs > AUCpred, AUCpred/AUCobs, AUCobs/AUCpred)
-
+metric3 <- 1 - abs( AUCobs - AUCpred )/ AUCobs
+  
 # Build dataframe for one simulation
 # DF: 1 - window size, 2 - metric1 , 3 - metric2
 metric_df$window[i]  <- low_win[i]
 metric_df$metric1[i] <- metric1
 metric_df$metric2[i] <- metric2
+metric_df$metric3[i] <- metric3
 }  
   
   # Repeat X times and row bind the simulations
@@ -184,7 +186,7 @@ str(metric_df_sim)
   ggplot(metric_df_sim,aes(x=window))+
     geom_point(aes(y=metric1)) 
   ggplot(metric_df_sim,aes(x=window))+
-    geom_point(aes(y=metric2)) 
+    geom_point(aes(y=metric1)) 
   
   MANY_LOESS(data_l = metric_df_sim
              , SPAN = .95
@@ -199,6 +201,53 @@ str(metric_df_sim)
              , color= "red"
              , pt_color = "black") 
   
+  
+  # metric 3
+  
+  
+  ggplot(metric_df_sim,aes(x=window))+
+    geom_point(aes(y=metric3)) 
+  ggplot(metric_df_sim,aes(x=window))+
+    geom_point(aes(y=metric3)) 
+  
+  MANY_LOESS(data_l = metric_df_sim
+             , SPAN = .95
+             , N_size = 500
+             , response = "metric3"
+             , predictor = "window"
+             , pt_alpha = .1
+             , N_LOESS = 100
+             , FRAC = 0.8
+             , ymax = 1
+             , ymin = .5
+             , color= "red"
+             , pt_color = "black") 
+  
+  MANY_LOESS(data_l = metric_df_sim
+             , SPAN = .95
+             , N_size = 500
+             , response = "metric1"
+             , predictor = "window"
+             , pt_alpha = .1
+             , N_LOESS = 100
+             , FRAC = 0.8
+             , ymax = 1
+             , ymin = .5
+             , color= "red"
+             , pt_color = "black") 
+  
+  MANY_LOESS(data_l = metric_df_sim
+             , SPAN = .95
+             , N_size = 500
+             , response = "metric2"
+             , predictor = "window"
+             , pt_alpha = .1
+             , N_LOESS = 100
+             , FRAC = 0.8
+             , ymax = 1
+             , ymin = .5
+             , color= "red"
+             , pt_color = "black") 
 
   
 
