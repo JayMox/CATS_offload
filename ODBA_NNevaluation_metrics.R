@@ -61,7 +61,7 @@ MANY_LOESS <-
       LAND_LOESS_DF <- cbind(LAND_LOESS_DF,loess_vec)
     }
     
-    LAND_long <- reshape::melt(LAND_LOESS_DF, id = "mean")
+    LAND_long <- reshape2::melt(LAND_LOESS_DF, id = "mean")
     point_sample <- sample_frac(data_l,FRAC)
     xp <- point_sample[,predictor]
     yp <- point_sample[,response]
