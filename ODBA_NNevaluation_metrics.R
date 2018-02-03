@@ -78,11 +78,12 @@ MANY_LOESS <-
       #      axis.text.y=element_blank(),
       #      plot.margin=unit(c(0,0,0,0), "null"))
     print(LOW_PLOT)
-  }
+}
 
 
 ### Read in pred/observed dataset on test set
-modeled <- read.csv('data/PR116_pred_results_64800.csv', header = T, stringsAsFactors = F)
+#modeled <- read.csv('data/PR116_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
+modeled <- read.csv('data/Original_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
 
 # quick interactive time series plot
 basic_plot <- ggplot(modeled, aes(x = time.sec))+
