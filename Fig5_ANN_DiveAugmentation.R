@@ -9,6 +9,8 @@ library(reshape)
 library(gridExtra)
 library(grid)
 
+dd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/data/"
+
 ##############################
 ###  Popular ggPlot theme  ###
 ##############################
@@ -115,7 +117,7 @@ MANY_LOESS_CV_MAR <-
 #############
 #build for PR
 #############
-load("/Users/jmoxley/Documents/GitTank/CC_CamTags/data/PR116_TestSet_sims.RData") 
+load(file.path(dd, "PR116_TestSet_sims.RData")) 
 colnames(pr.sim)[1] <- "interval"
 data_l = pr.sim; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
 N_LOESS = 500; FRAC = 1; ymax = 1; ymin = .80;color= "dark green"; pt_color = "black";
@@ -153,7 +155,7 @@ boundsPR <- point_samplePR %>% group_by(interval) %>%
 ##########
 ##With FINMOUNTORIG
 ###########
-load("/Users/jmoxley/Documents/GitTank/CC_CamTags/data/FinMountOrig_TestSet_sims.RData")
+load(file.path(dd, "FinMountOrig_TestSet_sims.RData"))
 colnames(fmo.sim)[1] <- "interval"
 data_l = fmo.sim; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
 N_LOESS = 500; FRAC = 1; ymax = 1; ymin = .80;color= "red"; pt_color = "black";
@@ -225,3 +227,4 @@ ggplot()+
   xlab("Interval") +
   ylab("Accuracy inferred via error percentage") +
   themeo
+ggsave(file = "goodness_of_fit_fig.png", path = dd)
