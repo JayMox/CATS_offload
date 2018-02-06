@@ -82,8 +82,8 @@ MANY_LOESS <-
 
 
 ### Read in pred/observed dataset on test set
-#modeled <- read.csv('data/PR116_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
-modeled <- read.csv('data/Original_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
+modeled <- read.csv('data/PR116_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
+#modeled <- read.csv('data/Original_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
 
 # quick interactive time series plot
 basic_plot <- ggplot(modeled, aes(x = time.sec))+
@@ -150,6 +150,8 @@ metric_df$metric3[i] <- metric3
 # metric_df_sim <- quantile_trim(metric_df_sim, "metric2")  
   
 str(metric_df_sim)
+#fmo_eval <- metric_df_sim
+
 
 # plot on reg scale - metric 2
   ggplot(metric_df_sim,aes(x=window))+
@@ -168,7 +170,7 @@ str(metric_df_sim)
   MANY_LOESS(data_l = metric_df_sim
              , SPAN = .9
              , N_size = 500
-             , response = "metric2"
+             , response = "metric3"
              , predictor = "window"
              , pt_alpha = .1
              , N_LOESS = 100
