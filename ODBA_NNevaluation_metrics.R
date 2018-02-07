@@ -1,4 +1,4 @@
-# TG wrote initial script
+# TG wrote initial scripts/plots
 library(ggplot2)
 library(plotly)
 library(DescTools)
