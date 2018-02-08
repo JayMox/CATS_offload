@@ -13,7 +13,7 @@ library(grid)
 
 #set drive
 dd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/data/"
-df <- read_csv(file.path(dd, "PR161108_ODBA_SaturationTest_obs_pred_1_18_hours.csv")) %>% 
+df <- read_csv(file.path(dd, "FinMountOrigChks_ODBA_SaturationTest_obs_pred_1_17_hours.csv")) %>% 
   filter(!is.na(`time-sec`))  #clip NAs to create a 6 hour test set using increasing amts of trianing data
 
 #Goodness of Fit simulations
