@@ -12,7 +12,7 @@ geom_mloess <- function(mapping = NULL, data = NULL, stat = "mloess",
                          position = "identity", show.legend = NA,
                          inherit.aes = TRUE, na.rm = TRUE,
                          #these go into the actual fxn call
-                         SPAN = .9, N_size = 500, N_LOESS = 500, ...) {
+                         SPAN = .9, N_size = 50, N_LOESS = 50, ...) {
   layer(
     geom = GeomMLoess,
     mapping = mapping,
@@ -22,8 +22,8 @@ geom_mloess <- function(mapping = NULL, data = NULL, stat = "mloess",
     show.legend = show.legend,
     inherit.aes = inherit.aes,
     params = list(SPAN = .9, 
-                  N_size = 500, 
-                  N_LOESS = 500,
+                  N_size = 50, 
+                  N_LOESS = 50,
                   ...)
   )
 }
@@ -35,7 +35,7 @@ GeomMLoess <- ggproto("GeomMLoess", GeomLine,
 
 stat_mloess <- function(mapping = NULL, data = NULL, geom = "line",
                          position = "identity", show.legend = NA, inherit.aes = TRUE,
-                         SPAN = .9, N_size = 500, N_LOESS = 500, ...) {
+                         SPAN = .9, N_size = 50, N_LOESS = 50, ...) {
   layer(
     stat = StatMLoess,
     data = data,
@@ -45,8 +45,8 @@ stat_mloess <- function(mapping = NULL, data = NULL, geom = "line",
     show.legend = show.legend,
     inherit.aes = inherit.aes,
     params = list(SPAN = .9, 
-                  N_size = 500, 
-                  N_LOESS = 500,
+                  N_size = 50, 
+                  N_LOESS = 50,
                   ...
     )
   )
@@ -57,14 +57,14 @@ StatMLoess <- ggproto("StatMLoess", Stat,
                       required_aes = c("x", "y"),
                        
                       compute_group = function(self, data, scales, params,
-                                               SPAN = .9, N_size = 500, N_LOESS = 500) {
+                                               SPAN = .9, N_size = 50, N_LOESS = 50) {
                         #right now works with 2-col matrix (col1: predictor, col2: response)
                         #could consider 
                         colnames(data) <- c("predictor", "response")
                         
                         LOESS_DF <- data.frame(interval = seq(min(data$predictor), 
                                                           max(data$predictor), 
-                                                          length.out = 500))
+                                                          length.out = 50))
                         
                         for(i in 1:N_LOESS){
                           # sample N_size points
@@ -89,10 +89,12 @@ StatMLoess <- ggproto("StatMLoess", Stat,
                         # 
                         # data.frame(x = xp, y = yp)
                         data.frame(x = DF_long$interval, 
-                                   y = DF_long$value, 
-                                   group = DF_long$variable)
+                                   y = DF_long$value)
                       }
 )
+
+ggplot(df, aes(interval, metric3)) + 
+  stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50, color = "red",alpha = 0.5)
 
 library(reshape2)
 str(fmo.sim)
@@ -104,10 +106,3 @@ ggplot(df_test,aes(x=window,y=value,color=variable))+
   geom_point(size = 0.1)+
   stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50,alpha = 0.5)
 
-ggplot(df, aes(interval, metric3)) + 
-  stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50, color = "red",alpha = 0.5)
-
-df_test <- melt(df)
-  
-  
-  geom_mloess(SPAN = .9, N_size = 500, N_LOESS = 500)

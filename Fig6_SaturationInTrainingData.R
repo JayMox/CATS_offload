@@ -1,6 +1,5 @@
 #Saturation curves for NN manuscript
 #building a figure for goodness of fits using increasing amounts of training data.  
-
 rm(list = ls())
 library(ggplot2)
 library(plotly)
@@ -13,13 +12,13 @@ library(grid)
 
 #set drive
 dd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/data/"
-df <- read_csv(file.path(dd, "FinMountOrigChks_ODBA_SaturationTest_obs_pred_1_17_hours.csv")) %>% 
-  filter(!is.na(`time-sec`))  #clip NAs to create a 6 hour test set using increasing amts of trianing data
+df <- read_csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hours.csv")) %>% 
+  select(-X21) %>% filter(!is.na(depth))  #clip NAs to create a 6 hour test set using increasing amts of trianing data
 
+df <- df[,1:6]
 #Goodness of Fit simulations
 window_max <- 10000 # in seconds
 low_win <- seq(from = 1, to = window_max,length.out = 50 )
-
 sims <- 100
 saturation <- data.frame(interval = rep(low_win, times = sims))
 
@@ -72,4 +71,11 @@ for(j in 4:ncol(df)){
   colnames(saturation)[j-2] <- paste(colnames(df[,j]), "-sim", sep="");
   print(paste(j, "IS DONE"))
 }
-save(saturation, file = file.path(dd, "saturaton_sims.RData"))
+#save(saturation, file = file.path(dd, "saturaton_sims.RData"))
+
+
+#melt data 
+mdf <- reshape2::melt(saturation, id.vars = "interval")
+ggplot(mdf %>% filter(variable == "ODBA-pred-1hr-sim"),aes(x=interval,y=value,color=variable))+
+#  geom_point(size = 0.1)+
+  stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50,alpha = 0.4)
