@@ -1,9 +1,14 @@
-#data to train on
+#data to train on; loads as fmo.sim (which is a metric_df_sim obj)
+library(ggplot2)
+
+dd <- dd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/data/"
 load(file.path(dd, "FinMountOrig_TestSet_sims.RData"))
+df <- fmo.sim[,c('window', 'metric3')]
+colnames(df) <- c("interval", "metric3")
 #data_l = fmo.sim; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; 
 #pt_alpha = .1; N_LOESS = 500; FRAC = 1; ymax = 1; ymin = .80;color= "red"; pt_color = "black";
 
-geom_mloess <- function(mapping = NULL, data = NULL, stat = "xspline",
+geom_mloess <- function(mapping = NULL, data = NULL, stat = "mloess",
                          position = "identity", show.legend = NA,
                          inherit.aes = TRUE, na.rm = TRUE,
                          #these go into the actual fxn call
@@ -62,7 +67,7 @@ StatMLoess <- ggproto("StatMLoess", Stat,
                                                           length.out = 500))
                         
                         for(i in 1:N_LOESS){
-                          # sample 1000 points
+                          # sample N_size points
                           df_sample <- dplyr::sample_n(data, N_size)
                           # fit a loess
                           xx <- df_sample$predictor
@@ -78,13 +83,31 @@ StatMLoess <- ggproto("StatMLoess", Stat,
                         }
                         
                         DF_long <- reshape2::melt(LOESS_DF, id = "interval")
-                        point_sample <- sample_frac(data,1)
-                        xp <- point_sample$predictor
-                        yp <- point_sample$response
-                        
-                        data.frame(x = xp, y = yp)
+                        # point_sample <- dplyr::sample_frac(data,1)
+                        # xp <- point_sample$predictor
+                        # yp <- point_sample$response
+                        # 
+                        # data.frame(x = xp, y = yp)
+                        data.frame(x = DF_long$interval, 
+                                   y = DF_long$value, 
+                                   group = DF_long$variable)
                       }
 )
 
+library(reshape2)
+str(fmo.sim)
+df_test <- melt(fmo.sim, id.vars = "window")
+str(df_test)
 
-ggplot(df, aes(interval, metric3)) + geom_mloess(SPAN = .9, N_size = 500, N_LOESS = 500)
+#working multiple colors for metric
+ggplot(df_test,aes(x=window,y=value,color=variable))+
+  geom_point(size = 0.1)+
+  stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50,alpha = 0.5)
+
+ggplot(df, aes(interval, metric3)) + 
+  stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50, color = "red",alpha = 0.5)
+
+df_test <- melt(df)
+  
+  
+  geom_mloess(SPAN = .9, N_size = 500, N_LOESS = 500)
