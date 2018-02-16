@@ -52,23 +52,24 @@ stat_mloess <- function(mapping = NULL, data = NULL, geom = "line",
   )
 }
 
+#stat loess orig, before changed to handle multiple test
 StatMLoess <- ggproto("StatMLoess", Stat,
-                       
+                      
                       required_aes = c("x", "y"),
-                       
+                      
                       compute_group = function(self, data, scales, params,
                                                SPAN = .9, N_size = 50, N_LOESS = 50) {
                         #right now works with 2-col matrix (col1: predictor, col2: response)
-                        #could consider 
+                        
                         colnames(data) <- c("predictor", "response")
                         
                         LOESS_DF <- data.frame(interval = seq(min(data$predictor), 
-                                                          max(data$predictor), 
-                                                          length.out = 50))
+                                                              max(data$predictor), 
+                                                              length.out = 50))
                         
                         for(i in 1:N_LOESS){
                           # sample N_size points
-                          df_sample <- dplyr::sample_n(data, N_size)
+                          df_sample <- sample_n(data, N_size)
                           # fit a loess
                           xx <- df_sample$predictor
                           yy <- df_sample$response
@@ -88,21 +89,45 @@ StatMLoess <- ggproto("StatMLoess", Stat,
                         # yp <- point_sample$response
                         # 
                         # data.frame(x = xp, y = yp)
-                        data.frame(x = DF_long$interval, 
-                                   y = DF_long$value)
+                        #data.frame(x = DF_long$interval, 
+                        #           y = DF_long$value)
                       }
 )
+
+####################################################
+########################TESTING#####################
+####################################################
+
+
 
 ggplot(df, aes(interval, metric3)) + 
   stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50, color = "red",alpha = 0.5)
 
 library(reshape2)
+load(file.path(dd, "FinMountOrig_TestSet_sims.RData"))
 str(fmo.sim)
 df_test <- melt(fmo.sim, id.vars = "window")
 str(df_test)
 
 #working multiple colors for metric
-ggplot(df_test,aes(x=window,y=value,color=variable))+
-  geom_point(size = 0.1)+
-  stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50,alpha = 0.5)
+ggplot(df_test,aes(x=window,y=value,group=variable,color=variable))+
+  #geom_point(size = 0.1)+
+  stat_mloess(SPAN = .2, N_size = 10, N_LOESS = 1)
 
+ggplot(df_test,aes(x=window,y=value,group=variable))+
+  #geom_point(size = 0.1)+
+  geom_smooth(method = "loess")
+
+library(viridis)
+colorBrewer
+ggplot(mdf, aes(x=interval, y = value, group = variable, color = variable) )+ 
+           stat_smooth(method = "loess", span = .9)
+
+
+
+         stat_mloess(SPAN = .2, N_size = 10, N_LOESS = 1)
+
+
+
+str(DF_long)
+ggplot(DF_long,aes(x = interval, y = value, color = variable))+geom_line()

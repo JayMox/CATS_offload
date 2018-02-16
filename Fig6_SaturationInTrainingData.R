@@ -142,7 +142,8 @@ save(saturation, file = file.path(dd, "pr116_sensitivity_sims.RData"))
 ###############
 #attempt on plots
 #melt data 
+load(file.path(dd, "pr116_sensitivity_sims.RData"))
 mdf <- reshape2::melt(saturation, id.vars = "interval")
-ggplot(mdf %>% filter(variable == "ODBA-pred-1hr-sim"),aes(x=interval,y=value,color=variable))+
+ggplot(mdf %>% filter(variable == "ODBA-pred-1hr-sim"),aes(x=interval,y=value,colour=variable))+
 #  geom_point(size = 0.1)+
   stat_mloess(SPAN = .9, N_size = 50, N_LOESS = 50,alpha = 0.4)
