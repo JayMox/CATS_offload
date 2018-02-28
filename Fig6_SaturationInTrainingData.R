@@ -50,16 +50,25 @@ ggplot(mdf,aes(x=interval,y=value))+
   geom_point(size = .1)+
   facet_wrap(~variable)
 
-ggplot(mdf, aes(x = interval, y = value, group=variable, color=variable)) + 
-  geom_point(color = "light gray") +
+#############
+##FIGURE PLOT
+mdf <- mdf %>% mutate(label = factor(str_extract(variable, "[:digit:]{1,2}"), 
+                                     levels = as.character(seq(1:17))))
+ggplot(mdf, aes(x = interval, y = value, group=label, color=label)) + 
+  geom_point(color = "light gray", alpha = 0.2) +
   lapply(1:10, # NUMBER OF LOESS
          function(i) {
            geom_smooth(data=mdf[sample(1:nrow(mdf), 
                                         2000),  #NUMBER OF POINTS TO SAMPLE
                                  ], se=FALSE, span = .95, size = 0.2, method = "loess")
          }) +
-  facet_wrap(~id) + themeo + ylim(0.5,1)
+  facet_grid(variable~id) + themeo +   guides(color = F) +
+  scale_x_continuous(expand=c(0,0)) + scale_y_continuous(limits = c(0.5, 1.0), breaks=c(0.5, 0.75, 1.0))
 
+
+                                          
+################
+################
 #
 predict(tp_est, newdata = 
           data.frame(xx = seq(min(data$predictor), max(data$predictor), length.out = 500)))
