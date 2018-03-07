@@ -199,13 +199,13 @@ ggplot()+
   geom_ribbon(data = sum_dataPR, aes(x=mean,ymax=value.97.5.,ymin = value.2.5.),  
               size = 0, 
               # color = color, 
-              fill = "orange", 
+              fill = "sky blue", 
               alpha = .6) +
   geom_line(data = sum_dataPR, aes(x=mean,y=value.V3), linetype="dashed", size = 1, color = "black") +
   #add bounds
-  stat_smooth(data = boundsPR, aes(x = interval, y = upper), color = 'orange', 
+  stat_smooth(data = boundsPR, aes(x = interval, y = upper), linetype="dashed", color = 'sky blue', 
               alpha = .5, method = "loess", se = F) + 
-  stat_smooth(data = boundsPR, aes(x = interval, y = lower), color = 'orange', 
+  stat_smooth(data = boundsPR, aes(x = interval, y = lower), linetype="dashed", color = 'sky blue', 
               alpha = .5, method = "loess", se = F) +
   #data set 2
   #geom_point(aes(x=xpFMO,y=ypFMO), alpha = .2 ,size = 0.02, color = pt_color) +
@@ -218,13 +218,15 @@ ggplot()+
   geom_line(data = sum_dataFMO, aes(x=mean,y=value.V3), linetype="dotdash", size = .8, color = "black") +
   #add bounds
   #geom_line(data = boundsFMO, aes(x = interval, y = upper), alpha = 0.5) + 
-  stat_smooth(data = boundsFMO, aes(x = interval, y = upper), color = 'sky blue', 
+  stat_smooth(data = boundsFMO, aes(x = interval, y = upper),linetype="dotdash", color = 'sky blue', 
               alpha = .1, method = "loess", se = F) + 
-  stat_smooth(data = boundsFMO, aes(x = interval, y = lower), color = 'sky blue', 
+  stat_smooth(data = boundsFMO, aes(x = interval, y = lower), linetype="dotdash", color = 'sky blue', 
               alpha = .5, method = "loess", se = F) +
   
-  scale_y_continuous(limits=c(ymin, 1)) +
-  xlab("Interval") +
-  ylab("Accuracy inferred via error percentage") +
+  scale_y_continuous(limits=c(0.5, 1), expand = c(0.01,0.01)) +
+  scale_x_continuous(expand = c(0.01,0.01)) +
+  xlab("AUC Interval") +
+  ylab("Accuracy (inferred via error percentage)") +
+  
   themeo
 ggsave(file = "goodness_of_fit_fig.png", path = dd)
