@@ -117,7 +117,7 @@ MANY_LOESS_CV_MAR <-
 #############
 #build for PR
 #############
-load(file.path(dd, "Pr116_3hrTestSet_AUCaccuracy.RData")) 
+load(file.path(dd, "Pr116_3hrTestSet_acc.RData")) 
 colnames(pr.acc)[1] <- "interval"
 data_l = pr.acc; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
 N_LOESS = 500; FRAC = 1; ymax = 1; ymin = .80;color= "dark green"; pt_color = "black";
