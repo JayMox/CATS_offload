@@ -117,9 +117,9 @@ MANY_LOESS_CV_MAR <-
 #############
 #build for PR
 #############
-load(file.path(dd, "PR116_TestSet_sims.RData")) 
-colnames(pr.sim)[1] <- "interval"
-data_l = pr.sim; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
+load(file.path(dd, "Pr116_3hrTestSet_AUCaccuracy.RData")) 
+colnames(pr.acc)[1] <- "interval"
+data_l = pr.acc; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
 N_LOESS = 500; FRAC = 1; ymax = 1; ymin = .80;color= "dark green"; pt_color = "black";
 
 LAND_LOESS_PR <- data.frame(mean = seq(min(data_l[,predictor]), max(data_l[,predictor]), length.out = 500))
@@ -155,9 +155,9 @@ boundsPR <- point_samplePR %>% group_by(interval) %>%
 ##########
 ##With FINMOUNTORIG
 ###########
-load(file.path(dd, "FinMountOrig_TestSet_sims.RData"))
-colnames(fmo.sim)[1] <- "interval"
-data_l = fmo.sim; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
+load(file.path(dd, "FMO_3hrTestSet_AUCaccuracy.Rdata"))
+colnames(fmo.acc)[1] <- "interval"
+data_l = fmo.acc; SPAN = .9; N_size = 500; response = "metric3"; predictor = "interval"; pt_alpha = .1;
 N_LOESS = 500; FRAC = 1; ymax = 1; ymin = .80;color= "red"; pt_color = "black";
 
 LAND_LOESS_FMO <- data.frame(mean = seq(min(data_l[,predictor]), max(data_l[,predictor]), length.out = 500))
@@ -195,7 +195,12 @@ boundsFMO <- point_sampleFMO %>% group_by(interval) %>%
 ymin = .7
 ggplot()+
   #data set 1
-  #geom_point(aes(x=xpPR,y=ypPR), alpha = .2 ,size = 0.02, color = pt_color) +
+  geom_point(aes(x=xpPR,y=ypPR), alpha = .2 ,size = 0.02, color = pt_color)+
+  geom_smooth(aes(x=xpPR,y=ypPR), method="loess")+themeo
+
+ggplot()+
+  #data set 1
+  geom_point(aes(x=xpPR,y=ypPR), alpha = .2 ,size = 0.02, color = pt_color) +
   geom_ribbon(data = sum_dataPR, aes(x=mean,ymax=value.97.5.,ymin = value.2.5.),  
               size = 0, 
               # color = color, 

@@ -81,9 +81,17 @@ MANY_LOESS <-
 }
 
 
-### Read in pred/observed dataset on test set
-modeled <- read.csv('data/PR116_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
+### Read in pred/observed dataset on test set; these use an 18hr training set
+#modeled <- read.csv(file.path(dd, 'PR116_pred_results_18hrtrain.csv'), header = T, stringsAsFactors = F)
 #modeled <- read.csv('data/Original_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
+
+#Read in data; these are using a 3hr dataset for final figures
+# modeled <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours.csv"), header = T, stringsAsFactors = F) %>% 
+#   select(time.sec, depth, ODBA.obs, ODBA.pred.3hr) %>% 
+#   dplyr::rename(observed = ODBA.obs , predicted = ODBA.pred.3hr)
+modeled <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hours.csv"), header = T, stringsAsFactors = F) %>%
+  select(time.sec, depth, ODBA.obs, ODBA.pred.3hr) %>%
+  dplyr::rename(observed = ODBA.obs , predicted = ODBA.pred.3hr)
 
 # quick interactive time series plot
 basic_plot <- ggplot(modeled, aes(x = time.sec))+
