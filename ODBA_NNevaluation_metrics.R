@@ -3,6 +3,7 @@ library(ggplot2)
 library(plotly)
 library(DescTools)
 library(dplyr)
+library(readr)
 library(reshape)
 library(gridExtra)
 library(grid)
@@ -86,66 +87,91 @@ MANY_LOESS <-
 #modeled <- read.csv('data/Original_pred_results_18hrtrain.csv', header = T, stringsAsFactors = F)
 
 #Read in data; these are using a 3hr dataset for final figures
-modeled <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours.csv"), header = T, stringsAsFactors = F) %>%
-  select(time.sec, depth, ODBA.obs, ODBA.pred.3hr) %>%
-  dplyr::rename(observed = ODBA.obs , predicted = ODBA.pred.3hr)
-# modeled <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hours.csv"), header = T, stringsAsFactors = F) %>%
-#   select(time.sec, depth, ODBA.obs, ODBA.pred.3hr) %>%
+# modeled <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours.csv"), header = T, stringsAsFactors = F) %>%
+#   select(time.sec, depth, ODBA.obs, ODBA.pred.5hr) %>%
 #   dplyr::rename(observed = ODBA.obs , predicted = ODBA.pred.3hr)
+modeled <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hours.csv"), header = T, stringsAsFactors = F) %>%
+  select(time.sec, depth, ODBA.obs, ODBA.pred.3hr) %>%
+  dplyr::rename(observed = ODBA.obs , predicted = ODBA.pred.3hr) %>%
+  filter(!is.na(predicted))
 
+#check other source of data
+# y_obs <- read_table(file.path(dd, "pr116_y_obs.txt"), col_names = "observed")
+# y_3hrpred <- read_table(file.path(dd, "pr116_y_pred_3h.txt"), col_names = "predicted")
+# 
+# y <- data.frame(time.sec = modeled$time.sec, depth = modeled$depth,
+#                 observed = y_obs, predicted = y_3hrpred)
 # quick interactive time series plot
 basic_plot <- ggplot(modeled, aes(x = time.sec))+
   geom_line(aes(y=observed), color = "red", size = 0.2)+
   geom_line(aes(y=predicted), color = "blue", size = 0.2)+themeo
 ggplotly(basic_plot)
 
+basic_plot2 <- ggplot(y, aes(x = time.sec))+
+  geom_line(aes(y=observed), color = "red", size = 0.2)+
+  geom_line(aes(y=predicted), color = "blue", size = 0.2)+themeo
+ggplotly(basic_plot)
 
 
 # logarithmic window sequence
 #low_win <- lseq(from = 1, to = 10000, length = 50)
 # conventional linear window sequence
 
-window_max <- 10000 # in seconds
-
-low_win <- seq(from = 1, to = window_max,length.out = 50 )
-
 # blank dataframe to stack simulations in
 metric_df_sim <- NULL
+#window_max <- 10000 # in seconds
+window_max <- 6000 #just over 1.5hr
+sims <- 100   # Number of sims
 
-# Number of sims
-sims <- 100
+low_win <- seq(from = 2, to = window_max,length.out = 50 )
+window_sampler <- data.frame(low_win = seq(from = 2, to = window_max,length.out = 50 ),
+                             n_pts = max(low_win)/sqrt(low_win)-sqrt(low_win) + 1)
+#using n_pts ensures similar amounts of error are integrated at varying interval sizes
+
 
 for(x in 1:sims){
   metric_df <- NULL
 
-for(i in 1:length(low_win)){
-
-# random number selection from which to start window grab
-rand_num <- sample(1:15000,1)
-print(rand_num)
-
-# acquire vectors describing that window based on indexed window size
-# and starting point random-uniform drawing
-x <- modeled$time.sec[rand_num:(rand_num+low_win[i])]
-y_obs  <- modeled$observed[rand_num:(rand_num+low_win[i])]
-y_pred <- modeled$predicted[rand_num:(rand_num+low_win[i])]
-
-# calculate area under the curve for actual and observed of the selected window
-AUCobs  <- AUC(x,y_obs)
-AUCpred <- AUC(x,y_pred)
-
-# two evaluation metrics, metric 1 appears sensitive to the magnitude of the AUC
-metric1 <- 1- ( abs( AUCobs - AUCpred )/ low_win[i] )
-metric2 <- ifelse(AUCobs > AUCpred, AUCpred/AUCobs, AUCobs/AUCpred)
-metric3 <- 1 - abs( AUCobs - AUCpred )/ AUCobs
-  
-# Build dataframe for one simulation
-# DF: 1 - window size, 2 - metric1 , 3 - metric2
-metric_df$window[i]  <- low_win[i]
-metric_df$metric1[i] <- metric1
-metric_df$metric2[i] <- metric2
-metric_df$metric3[i] <- metric3
-}  
+    for(i in 1:length(low_win)){
+    
+        # random number selection from which to start window grab
+        #rand_num <- sample(1:15000,1)
+        # rand_num <- repeat{               #sample starting index w/in bounds of data
+        #   j <- sample(1:nrow(modeled), 1)
+        #   #print(j)
+        #   if(j + low_win[i] <= nrow(modeled)) return(j)
+        # }
+        
+        success <- FALSE
+        while(!success){    #sample until idx + window is within data bounds
+          j <- sample(1:nrow(modeled), 1)
+          success <- (j + low_win[i]) <= nrow(modeled)
+        }
+        rand_num <- j
+        print(rand_num)
+        
+        # acquire vectors describing that window based on indexed window size
+        # and starting point random-uniform drawing
+        x <- modeled$time.sec[rand_num:(rand_num+low_win[i])]
+        y_obs  <- modeled$observed[rand_num:(rand_num+low_win[i])]
+        y_pred <- modeled$predicted[rand_num:(rand_num+low_win[i])]
+        
+        # calculate area under the curve for actual and observed of the selected window
+        AUCobs  <- AUC(x,y_obs)
+        AUCpred <- AUC(x,y_pred)
+        
+        # two evaluation metrics, metric 1 appears sensitive to the magnitude of the AUC
+        metric1 <- 1- ( abs( AUCobs - AUCpred )/ low_win[i] )
+        metric2 <- ifelse(AUCobs > AUCpred, AUCpred/AUCobs, AUCobs/AUCpred)
+        metric3 <- 1 - abs( AUCobs - AUCpred )/ AUCobs
+        
+        # Build dataframe for one simulation
+        # DF: 1 - window size, 2 - metric1 , 3 - metric2
+        metric_df$window[i]  <- low_win[i]
+        metric_df$metric1[i] <- metric1
+        metric_df$metric2[i] <- metric2
+        metric_df$metric3[i] <- metric3
+        }  
   
   # Repeat X times and row bind the simulations
   metric_df <- as.data.frame(metric_df)
@@ -163,8 +189,10 @@ str(metric_df_sim)
 
 # plot on reg scale - metric 2
   ggplot(metric_df_sim,aes(x=window))+
-    geom_point(aes(y=metric2), size = .2) #+
+    geom_point(aes(y=metric3), size = .2) #+
     #coord_cartesian(ylim = c(.85,1)) + themeo
+  ggplot(metric_df_sim %>% group_by(window) %>% summarize(mean = mean(metric3)))+
+    geom_point(aes(x = window, y = mean)) + ylim(0.4, 1.0)
 
 # plot on log scale - metric 2
   ggplot(metric_df_sim,aes(x=window))+
@@ -184,14 +212,14 @@ str(metric_df_sim)
              , N_LOESS = 100
              , FRAC = 1
              , ymax = 1
-             , ymin = .80
+             , ymin = .40
              , color= "red"
              , pt_color = "black") 
   
 
   
    
-# metric 1 
+  # metric 1 
   
   
   ggplot(metric_df_sim,aes(x=window))+
