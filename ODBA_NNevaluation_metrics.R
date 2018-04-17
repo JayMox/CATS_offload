@@ -95,6 +95,10 @@ modeled <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hour
   dplyr::rename(observed = ODBA.obs , predicted = ODBA.pred.3hr) %>%
   filter(!is.na(predicted))
 
+modeled <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_training_obs_pred_1_17_hours.csv"), header = T, stringsAsFactors = F) 
+
+%>% 
+  select(X, observed = trg.odba, predicted = out.odba)
 #check other source of data
 # y_obs <- read_table(file.path(dd, "pr116_y_obs.txt"), col_names = "observed")
 # y_3hrpred <- read_table(file.path(dd, "pr116_y_pred_3h.txt"), col_names = "predicted")
@@ -109,7 +113,8 @@ ggplotly(basic_plot)
 
 basic_plot2 <- ggplot(y, aes(x = time.sec))+
   geom_line(aes(y=observed), color = "red", size = 0.2)+
-  geom_line(aes(y=predicted), color = "blue", size = 0.2)+themeo
+  geom_line(aes(y=predicted), color = "blue", size = 0.2)+
+  scale_x_continuous(themeo
 ggplotly(basic_plot)
 
 

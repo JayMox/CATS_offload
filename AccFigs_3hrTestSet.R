@@ -8,6 +8,7 @@ library(dplyr)
 library(reshape)
 library(gridExtra)
 library(grid)
+library(forcats)
 
 dd <- "/Users/jmoxley/Documents/GitTank/CC_CamTags/data/"
 
@@ -129,10 +130,10 @@ fmo <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_3_hours.csv")
 #modeled <- modeled[9201:nrow(modeled),]
 #params
 #data storage
-modeled <- fmo
+modeled <- pr
 saturation = NULL
 #window_max <- 10000 # in seconds
-window_max <- 3600 #just over 1.5hr
+window_max <- 5400 #just over 1.5hr
 sims <- 500   # Number of sims
 low_win <- seq(from = 2, to = window_max,length.out = 60 )
 
@@ -204,12 +205,14 @@ for(j in 4:ncol(modeled)){
 #########################
 #####Plot up side by side
 #########################
-load(file.path(dd, "pr_saturation_20180330.RData")); 
+load(file.path(dd, "pr_saturation_20180403.RData")); 
 pr.saturation <- pr.saturation %>% mutate(id = "pr116")
-load(file.path(dd, "fmo_saturation_20180330.RData"))
+load(file.path(dd, "fmo_saturation_20180403.RData"))
 fmo.saturation <- fmo.saturation %>% mutate(id = "fmo")
-saturation <- bind_rows(pr.saturation, fmo.saturation); summary(saturation)
-mdf <- melt(saturation, id.vars = c("id", "interval")) %>% group_by(id, variable, interval)
+saturation <- merge(bind_rows(pr.saturation, fmo.saturation), 
+                    data.frame(id = c('pr116', 'fmo'), labels = factor(c('Shark 1', 'Shark 2'))), 
+                    by = 'id'); summary(saturation)
+mdf <- melt(saturation, id.vars = c("id", "interval", "labels")) %>% group_by(id, variable, interval)
 ggplot(mdf %>% group_by(id), aes(x = interval, y = value, group=id, color=id)) + 
   geom_point(color = "light gray", alpha = 0.2) +
   lapply(1:50, # NUMBER OF LOESS
@@ -217,17 +220,18 @@ ggplot(mdf %>% group_by(id), aes(x = interval, y = value, group=id, color=id)) +
            # geom_smooth(data=mdf[sample(1:nrow(mdf), 
            #                             2000),  #NUMBER OF POINTS TO SAMPLE
            #                      ], se=FALSE, span = .95, size = 0.2, method = "loess")
-            geom_smooth(data=(mdf %>% group_by(id, variable, interval) %>% sample_n(10)),  #NUMBER OF POINTS TO SAMPLE
+            geom_smooth(data=(mdf %>% group_by(id, variable, interval) %>% sample_n(5)),  #NUMBER OF POINTS TO SAMPLE
                         se=FALSE, span = .95, size = 0.2, method = "loess")
            # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
            #             se=FALSE, span = .95, size = 0.2, method = "loess")
          }) +
   # geom_line(data = mdf %>% group_by(variable, interval) %>% 
   #             summarize(sd = sd(value)), aes(x = interval, y = 1-sd), color = 'black')+
-  facet_wrap(id~variable) + themeo + guides(color = F) +
-  scale_x_continuous(expand=c(0,0), limits = c(0, 3600), breaks = seq(600, 3600, length.out = 6), labels = c("10","20","30","40","50","60")) +
-  scale_y_continuous(limits = c(0.5, 1.0), breaks=c(0.5, 0.75, 1.0)) + 
-  labs(x = "sampling interval (in mins)", y = "predictive accuracy (as inferred from AUC)")
+  facet_wrap(~labels) +
+  themeo + guides(color = F) +
+  scale_x_continuous(expand=c(0,0), limits = c(0, window_max), breaks = seq(600, window_max, length.out = 5), labels = c("10","30","50","70","90")) +
+  scale_y_continuous(limits = c(0.5, 1.0), breaks=seq(0.5,1.0, length.out=5)) + 
+  labs(x = "Sampling interval (in mins)", y = "Predictive accuracy (as inferred from AUC)")
   
 
 #plot just the bounds
