@@ -40,7 +40,18 @@ pr.native <- read.csv(file.path(substr(dd, 0, 48), "PR161108_ODBA_test_obs_pred_
   mutate(id = "PR", tuning = "native", error = observed - ODBA.pred.3hr)
 df <- bind_rows(fmo.swap, pr.swap, fmo.native, pr.native)
 
-ggplot(data = df, aes(x = error)) + geom_histogram(aes(y = ..density.., fill = tuning, alpha = 0.3)) + 
-  geom_density(alpha = 0.3, aes(fill = tuning))+
+#plotting
+p <- ggplot(data = df, aes(x = error)) + #geom_histogram(aes(y = ..density.., fill = fct_rev(tuning), alpha = 0.3)) + 
+  geom_density(alpha = 0.5, aes(fill = fct_rev(tuning)))+
+  geom_vline(xintercept = 0, linetype = "dashed")+
   facet_wrap(~id, scales = "free") + 
   themeo
+
+#ts
+#quick look
+chk_plot <- ggplot(data = df %>% select(-error) %>% spread(tuning, ODBA.pred.3hr), aes(x=time.sec)) +
+    geom_line(aes(y=observed), color = "black", size = 0.2) + 
+    geom_line(aes(y=native), color = "#397fba", size = 0.2)+
+    geom_line(aes(y=swapped), color = "#e11f28", size = 0.2)+
+    labs(title = "green = observed, red = native, blue = generalized") + themeo + facet_wrap(~id, scales = "free")
+ggplotly(chk_plot)
