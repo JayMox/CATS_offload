@@ -25,10 +25,10 @@ themeo <-theme_classic()+
 
 #get data
 fmo <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hours.csv"), header = T) %>% 
-  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.3hr, ODBA.pred.6hr, ODBA.pred.12hr) %>% 
+  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.1hr, ODBA.pred.3hr, ODBA.pred.12hr) %>% 
   filter(!is.na(time.sec))
 pr <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours.csv"), header = T) %>% 
-  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.3hr, ODBA.pred.6hr, ODBA.pred.12hr) %>% 
+  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.1hr, ODBA.pred.3hr, ODBA.pred.12hr) %>% 
   filter(!is.na(time.sec))
 
 #calc time-integrated accuracy
@@ -95,9 +95,10 @@ for(j in 4:ncol(modeled)){
 #save dataaaa
 #fmo.saturation <- mutate(saturation, shark = "Shark 2")
 #save(fmo.saturation, file = file.path(dd, "fmo_saturate3.6.12.RData"))
-#pr.saturation <- mutate(saturation, shark = "Shark 1")
-#save(pr.saturation, file = file.path(dd, "pr.saturation3.6.12.RData"))
-
+pr.saturation <- mutate(saturation, shark = "Shark 1")
+save(pr.saturation, file = file.path(dd, "pr.saturation3.6.12.RData"))
+#this is a test
+load(file.path(dd, "fmo_saturate3.6.12.RData"))
 
 ##plotting
 mdf <- bind_rows(fmo.saturation, pr.saturation) %>% 
