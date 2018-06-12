@@ -32,7 +32,7 @@ pr <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours.csv"), head
   filter(!is.na(time.sec))
 
 #calc time-integrated accuracy
-modeled <- pr
+modeled <- fmo
 saturation = NULL
 #window_max <- 10000 # in seconds
 window_max <- 5400 #just over 1.5hr
@@ -93,12 +93,11 @@ for(j in 4:ncol(modeled)){
   colnames(saturation)[j-2] = colnames(modeled)[j]    
 }
 #save dataaaa
-#fmo.saturation <- mutate(saturation, shark = "Shark 2")
-#save(fmo.saturation, file = file.path(dd, "fmo_saturate3.6.12.RData"))
-pr.saturation <- mutate(saturation, shark = "Shark 1")
-save(pr.saturation, file = file.path(dd, "pr.saturation3.6.12.RData"))
-#this is a test
-load(file.path(dd, "fmo_saturate3.6.12.RData"))
+# fmo.saturation <- mutate(saturation, shark = "Shark 2")
+# save(fmo.saturation, file = file.path(dd, "fmo_saturate3.6.12.RData"))
+# pr.saturation <- mutate(saturation, shark = "Shark 1")
+# save(pr.saturation, file = file.path(dd, "pr.saturation3.6.12.RData"))
+
 
 ##plotting
 mdf <- bind_rows(fmo.saturation, pr.saturation) %>% 
@@ -109,7 +108,8 @@ mdf <- bind_rows(fmo.saturation, pr.saturation) %>%
 set.seed(69)
 ggplot(data = mdf %>% group_by(shark, trainhrs, interval), 
        aes(x = interval, y = accuracy, group=trainhrs, color=shark)) + 
-  geom_point(color = "light gray", alpha = 0.2) +
+  geom_point(data = mdf %>% group_by(shark, trainhrs, interval) %>% sample_n(100),
+             color = "light gray", alpha = 0.2) +
   lapply(1:50, # NUMBER OF LOESS
          function(i) {
            # geom_smooth(data=mdf[sample(1:nrow(mdf), 

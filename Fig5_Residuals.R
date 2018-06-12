@@ -66,7 +66,7 @@ grid.arrange(p, q, s)
   geom_vline(xintercept = 0, linetype = "dashed")+
   scale_fill_manual(values = c("#e11f28", "#397fba")) + 
   scale_x_continuous(limits = c(-2,2))+
-  facet_wrap(~shark, scales = "free") + guides(fill = F) + labs(x = "residuals", y = "") + 
+  facet_wrap(~shark) + guides(fill = F) + labs(x = "residuals", y = "") + 
   themeo)
 
 #ts
@@ -83,4 +83,25 @@ chk_plot <- ggplot(data = df %>% select(time.sec, depth, obs.sc, shark, id, tuni
 #ggplotly(chk_plot)
 chk_plot
 
-grid.arrange(p, chk_plot, ncol = 1)
+
+
+
+#find a more dynamic section for shrk2
+(chk_plot <- ggplot(data = bind_rows(df %>% #filter(shark == "Shark 1" & time.sec > 79000 & time.sec < 82500),
+                                     #df %>% 
+                                       filter(shark == "Shark 2" 
+                                              #& time.sec > 63500 & time.sec < 63500+3500
+                                              )) %>% 
+                      select(time.sec, depth, obs.sc, shark, id, tuning, pred.sc) %>% 
+                      spread(tuning, pred.sc),
+                     aes(x=time.sec)) +
+  geom_line(aes(y=obs.sc), color = "black", size = 0.3) + 
+  geom_line(aes(y=native), color = "#397fba", size = 0.3)+    #blue
+  geom_line(aes(y=swapped), color = "#e11f28", size = 0.35)+  #red
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_x_continuous(labels = NULL)+
+  labs(x = "time", y = "ODBA (standardized)", title = "black = observed, blue = native, red = generalized") + 
+  themeo + facet_wrap(~shark, scales = "free_x"))
+ggplotly(chk_plot)
+
+grid.arrange(chk_plot, p, ncol = 1)
