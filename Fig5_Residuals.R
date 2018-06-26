@@ -49,7 +49,7 @@ pr.native <- read.csv(file.path(substr(dd, 0, 48), "PR161108_ODBA_test_obs_pred_
 df <- bind_rows(fmo.swap, pr.swap, fmo.native, pr.native)
 
 #plotting
-p <- ggplot(data = df %>% select(-error, -error.sc, -obs.sc, -pred.sc, -obs.sc2, -pred.sc2) %>% 
+p <- ggplot(data = df %>% #select(-error, -error.sc, -obs.sc, -pred.sc, -obs.sc2, -pred.sc2) %>% 
        gather(source, odba, -time.sec, -depth, -id, -tuning)) + geom_line(aes(x = time.sec, y = odba, color = source, linetype = tuning)) + 
   facet_wrap(~id) + themeo+ geom_hline(yintercept = 0) + labs(title = "non-normalized")
 q <- ggplot(data = df %>% select(-error, -error.sc, -obs, -pred, -obs.sc2, -pred.sc2) %>% 
