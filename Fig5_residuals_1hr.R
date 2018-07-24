@@ -48,6 +48,24 @@ pr.native <- read.csv(file.path(dd, "Shark1_ODBA_test_6_hours_pred_1_18_hours.cs
   mutate(error = obs - pred, obs.sc = obs/median(obs), pred.sc = pred/median(pred), error.sc = obs.sc - pred.sc) #, error.sc = obs.sc - pred.sc, error.sc2 = obs.sc2 - pred.sc2)
 df <- bind_rows(fmo.swap, pr.swap, fmo.native, pr.native)
 
+
+##r2 for native vs. generalized prediction
+pr.test <- data.frame(depth = pr.native$depth, 
+                            native = pr.native$pred, 
+                            swap = pr.swap$pred)
+(r2 <- 1 - (sum((pr.test$native-pr.test$swap )^2)/
+             sum((pr.test$native-mean(pr.test$native))^2)))
+
+fmo.test <- data.frame(depth = fmo.native$depth, 
+                             native = fmo.native$pred, 
+                             swap = fmo.swap$pred)
+(r2 <- 1 - (sum((fmo.test$native-fmo.test$swap)^2)/
+              sum((fmo.test$native-mean(fmo.test$native))^2)))
+
+#correlation test
+cor.test(pr.test$native, pr.test$swap, method = "pearson")
+cor.test(fmo.test$native, fmo.test$swap, method = "pearson")
+
 ###
 #plot
 ###
