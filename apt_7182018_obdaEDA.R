@@ -1,18 +1,18 @@
 #aptos depth trajectory work up
 dd <- "/Volumes/WHITE SHARK/CA2018/test"
 files <- list.files(dd, pattern=("*.csv"),full.names = T)
-files <- files[-3]
-##issues with files 3 & 4? 
-dep <- NULL
-for(i in 1:length(files)){
-  print(i)
-  dep <- rbind(dep, try(data.table::fread(files[i], select = "Depth (100bar) 1 [m]", colClasses = "numeric")))
-  
-}
-colnames(dep) <- "depth"
-
-summary(dep)
-plot(dep$depth, type = "l")
+ files <- files[-3]
+# ##issues with files 3 & 4? 
+# dep <- NULL
+# for(i in 1:length(files)){
+#   print(i)
+#   dep <- rbind(dep, try(data.table::fread(files[i], select = "Depth (100bar) 1 [m]", colClasses = "numeric")))
+#   
+# }
+# colnames(dep) <- "depth"
+# 
+# summary(dep)
+# plot(dep$depth, type = "l")
 
 
 ###BUTTER APPROACH

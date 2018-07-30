@@ -174,3 +174,55 @@ eda.plot <- function(df2){
   abline(h = 1.5, lty = 2); abline(h = -1.5, lty = 2)
 }
 
+#function to append a vector of day/night times
+##https://www.rdocumentation.org/packages/maptools/versions/0.6-5/topics/sunriset-methods
+#based on sunriset(), defaults coordinates of MBay Inner Buoy
+add_night <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
+  if(as.numeric(max(dts)-min(dts)) > 30){print("long deployment; method not quite adequate")}
+  #NB: not adequate for multi-month deployments if 
+  #sunrise/sunset will change dramatically over time
+  require(maptools)
+  require(sp)
+  
+  #default to middle of monty bay
+  if(class(loc) != "SpatialPoints"){
+    coord = matrix(c(-122.029, 36.751), nrow=1)
+    #https://www.ndbc.noaa.gov/station_page.php?station=46092
+    loc = SpatialPoints(coord, proj4string=CRS("+proj=longlat +datum=WGS84"))
+    print("loc provided was not SpatialPoints class")
+    print("DEFAULTING TO MONTY BAY BUOY")
+  }
+  
+  #use mode as a dummy day
+  dummy.dt <- as.POSIXct(Mode(format(dts, format = '%Y-%m-%d')), 
+                          tz = attr(dts, "tz"))
+  print(paste("dummy date is", dummy.dt))
+  #get vector of sunrise/set
+  up <- sunriset(loc, dummy.dt, 
+                    direction="sunrise", POSIXct.out = TRUE)
+  print(paste("sunrise times will be", up$time))
+  down <- sunriset(loc, dummy.dt, 
+                   direction="sunset", POSIXct.out = TRUE)
+  if(down$day_frac > 1){down$day_frac <- down$day_frac - 1} #don't let creep into next day
+  print(paste("sunset times will be", down$time))
+  
+  #test if a reading is at night
+  night <- NA
+  # dummy.dts <- as.POSIXct(paste(dummy.dt, 
+  #                               strftime(dts, "%H:%M:%S", tz = attr(dts, "tz"))), 
+  #                         tz = attr(dts, "tz"))
+  d <- secs_midnight(dts)/(3600*24)  #proportion of day
+  night <- factor(ifelse(d > down$day_frac & d < up$day_frac,
+                  "night", "day"))
+  
+  return(night)
+}
+
+#function to tally secs since midnight
+secs_midnight <- function(dts){
+  return(as.numeric(dts) - 
+           as.numeric(as.POSIXct(
+             paste(as.Date(dts), "00:00:00"), tz = attr(dts, "tz"))))
+}
+
+
