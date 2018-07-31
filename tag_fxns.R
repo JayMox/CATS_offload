@@ -218,6 +218,30 @@ add_night <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
   return(night)
 }
 
+nighttime <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
+  #function to return a data frame of sunsets/sunrises for plotting tag data
+  require(maptools)
+  #default to middle of monty bay
+  if(class(loc) != "SpatialPoints"){
+    coord = matrix(c(-122.029, 36.751), nrow=1)
+    #https://www.ndbc.noaa.gov/station_page.php?station=46092
+    loc = SpatialPoints(coord, proj4string=CRS("+proj=longlat +datum=WGS84"))
+    print("loc provided was not SpatialPoints class")
+    print("DEFAULTING TO MONTY BAY BUOY")
+  }
+  
+  dates <- as.POSIXct(unique(strftime(dts, format = "%Y:%m:%d")), 
+                   format = "%Y:%m:%d", tz = attr(dts, "tz"))
+  
+  df <- data.frame(
+    down = sunriset(loc, dates, 
+                    direction="sunset", POSIXct.out = TRUE)$time,
+    up = sunriset(loc, dates + days(1), 
+                  direction="sunrise", POSIXct.out = TRUE)$time
+  )
+  return(df)
+}
+
 #function to tally secs since midnight
 secs_midnight <- function(dts){
   return(as.numeric(dts) - 
@@ -225,4 +249,13 @@ secs_midnight <- function(dts){
              paste(as.Date(dts), "00:00:00"), tz = attr(dts, "tz"))))
 }
 
-
+#simple ggplot theme
+themeo <-theme_classic()+
+  theme(strip.background = element_blank(),
+        axis.line = element_blank(),
+        axis.text.x = element_text(margin = margin( 0.2, unit = "cm")),
+        axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
+        axis.ticks.length=unit(-0.1, "cm"),
+        panel.border = element_rect(colour = "black", fill=NA, size=.5),
+        legend.title=element_blank(),
+        strip.text=element_text(hjust=0) )
