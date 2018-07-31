@@ -55,7 +55,7 @@ library(gridExtra)
 p <- df[seq(min(idx), max(idx), by=120),] %>% ggplot(aes(x = dts, y = 0-depth)) + 
   geom_line(alpha = 0.2) +
   geom_point(aes(color = temp))+
-  geom_hline( aes(yintercept = 0))+
+  #geom_hline( aes(yintercept = 0))+
   scale_colour_gradient2(low = "blue", mid="green", high = "red", midpoint = 22) + 
   geom_rect(data = nights[1:6,], inherit.aes=FALSE, aes(xmin = down, xmax = up, ymin = -Inf, ymax = Inf), alpha =0.3)+
   #geom_bar(data = nights, inherit.aes=FALSE,aes(x = dts, y = Inf)) + 
@@ -63,7 +63,7 @@ p <- df[seq(min(idx), max(idx), by=120),] %>% ggplot(aes(x = dts, y = 0-depth)) 
 q <- df[seq(min(idx), max(idx), by=120),] %>% ggplot(aes(x = dts-hours(7), y = 0-depth)) + 
   geom_line(alpha = 0.2) +
   geom_point(aes(color = temp.dep))+
-  geom_hline(aes(yintercept = 0))+
+  #geom_hline(aes(yintercept = 0))+
   scale_colour_gradient2(low = "blue", mid="green", high = "red", midpoint = 15) + 
   geom_rect(data = nights[1:6,], inherit.aes=FALSE, aes(xmin = down-hours(7), xmax = up-hours(7), ymin = -Inf, ymax = Inf), alpha =0.3)+
   #geom_bar(data = nights, inherit.aes=FALSE,aes(x = dts, y = Inf)) + 
@@ -71,3 +71,16 @@ q <- df[seq(min(idx), max(idx), by=120),] %>% ggplot(aes(x = dts-hours(7), y = 0
 grid.arrange(p, q, ncol = 1)
 library(plotly)
 ggplotly(p)
+
+#plot for niko
+sc <- df %>% filter(as.numeric(dts) >= 1532190106 &
+                as.numeric(dts) <= 1532395421)
+sc[seq(1, nrow(sc), by = 120),] %>% ggplot(aes(x = dts, y = 0-depth)) + 
+  geom_line(alpha = 0.2) +
+  geom_point(aes(color = temp))+
+  #geom_hline( aes(yintercept = 0))+
+  scale_colour_gradient2(low = "blue", mid="green", high = "red", midpoint = 20) + 
+  geom_rect(data = nights[3:5,], inherit.aes=FALSE, aes(xmin = down, xmax = up, ymin = -Inf, ymax = Inf), alpha =0.3)+
+  #geom_bar(data = nights, inherit.aes=FALSE,aes(x = dts, y = Inf)) + 
+  labs(title = "temperature imu", y = "depth", x = "local time") + themeo
+                
