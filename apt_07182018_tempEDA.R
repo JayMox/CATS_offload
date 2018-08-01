@@ -1,6 +1,7 @@
 dd <- "/Volumes/WHITE SHARK/CA2018/APT_CC0705_07182018/SI_conversion"
 files <- list.files(dd, pattern=("*.csv"),full.names = T); length(files)
 #files <- files[-3]
+source("tag_fxns.R")
 
 ###BUTTER APPROACH
 library(gRumble)
