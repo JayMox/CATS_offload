@@ -25,11 +25,11 @@ themeo <-theme_classic()+
 #AUC procedure
 #get data
 fmo <- read.csv(file.path(dd, "FinMountOrigChks_ODBA_test_obs_pred_1_17_hours_SWAP.csv"), header = T) %>% 
-  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.3hr) %>% 
+  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.1hr, ODBA.pred.3hr) %>% 
   filter(!is.na(time.sec)) %>% 
   mutate(id = "FMO")
 pr <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours_SWAP.csv"), header = T) %>% 
-  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.3hr) %>% 
+  select(time.sec, depth, observed = ODBA.obs, ODBA.pred.1hr, ODBA.pred.3hr) %>% 
   filter(!is.na(time.sec)) %>% 
   mutate(id = "PR")
 
@@ -43,22 +43,22 @@ pr <- read.csv(file.path(dd, "PR161108_ODBA_test_obs_pred_1_18_hours_SWAP.csv"),
 #   mutate(id = "PR")
 
 #calc time-integrated accuracy
-modeled <- fmo
+modeled <- pr
 saturation = NULL
 window_max <- 5400 #just over 1.5hr
 sims <- 500   # Number of sims
 low_win <- seq(from = 2, to = window_max,length.out = 60 )
 
-#quick look
-basic_plot <- ggplot(modeled, aes(x = time.sec))+
-  geom_line(aes(y=observed), color = "red", size = 0.2)+
-  geom_line(aes(y=ODBA.pred.3hr), color = "blue", size = 0.2)+themeo
-chk_plot <- ggplot() +
-  geom_line(data = fmo, aes(x = time.sec, y=ODBA.pred.3hr), color = "red", size = 0.2)+
-  geom_line(data = tst1, aes(x = time.sec, y=ODBA.pred.3hr), color = "blue", size = 0.2)+
-  geom_line(data = fmo, aes(x = time.sec, y=observed), color = "dark green", size = 0.2)+
-  labs(title = "green = observed, red = native, blue = generalized") + themeo
-ggplotly(chk_plot)
+# #quick look
+# basic_plot <- ggplot(modeled, aes(x = time.sec))+
+#   geom_line(aes(y=observed), color = "red", size = 0.2)+
+#   geom_line(aes(y=ODBA.pred.3hr), color = "blue", size = 0.2)+themeo
+# chk_plot <- ggplot() +
+#   geom_line(data = fmo, aes(x = time.sec, y=ODBA.pred.3hr), color = "red", size = 0.2)+
+#   geom_line(data = tst1, aes(x = time.sec, y=ODBA.pred.3hr), color = "blue", size = 0.2)+
+#   geom_line(data = fmo, aes(x = time.sec, y=observed), color = "dark green", size = 0.2)+
+#   labs(title = "green = observed, red = native, blue = generalized") + themeo
+# ggplotly(chk_plot)
 
 for(j in 4:ncol(modeled)-1){
   metric_df_sim <- NULL
@@ -115,26 +115,38 @@ for(j in 4:ncol(modeled)-1){
 }
 #save dataaaa
 #fmo.saturation <- mutate(saturation, shark = "Shark 2")
-#save(fmo.saturation, file = file.path(dd, "fmo.saturate.3hr.swap.RData"))
+#save(fmo.saturation, file = file.path(dd, "fmo.saturate.1hr.3hr.swap.RData"))
 # pr.saturation <- mutate(saturation, shark = "Shark 1")
-# save(pr.saturation, file = file.path(dd, "pr.saturation.3hr.swap.RData"))
+# save(pr.saturation, file = file.path(dd, "pr.saturation.1hr.3hr.swap.RData"))
 
 
 
 #get data
-load(file.path(dd, "fmo_saturate3hr.swap.RData"))
-load(file.path(dd, "pr.saturation.3hr.swap.RData"))
-df <- bind_rows(fmo.saturation %>% select(-id), pr.saturation %>% select(-id))
+load(file.path(dd, "fmo_saturate.1hr.3hr.swap.RData"))
+load(file.path(dd, "pr.saturation.1hr.3hr.swap.RData"))
+load(file.path(dd, "pr.saturation.null.RData"))
+load(file.path(dd, "fmo_saturate.null.RData"))
 
+df <- bind_rows(fmo.saturation %>% select(-ODBA.pred.3hr), pr.saturation %>% select(-ODBA.pred.3hr))
 #melt
-mdf <- melt(df, id.vars = c("interval", "shark"))
+mdf <- bind_rows(fmo.saturation %>% select(-ODBA.pred.3hr),
+                 pr.saturation %>% select(-ODBA.pred.3hr)) %>% 
+  gather(training, accuracy, -interval, -shark) %>% 
+  mutate(shark = factor(shark), 
+         trainhrs = factor(str_split(training, "\\.", simplify = T)[,3]), 
+         training = "ANN_swap_pred") %>% 
+  bind_rows(fmo.saturation.null %>% 
+              select(everything(), accuracy = metric3) %>% 
+              mutate(training = "null", trainhrs = "null"),
+            pr.saturation.null %>% 
+              select(everything(), accuracy = metric3) %>% 
+              mutate(training = "null", trainhrs = "null")) %>% 
+  mutate(trainhrs = factor(trainhrs))
 #plot (based on SO sol'n here: https://stackoverflow.com/questions/48835600/building-a-ggproto-geom-extension)
 
-#FIGURE CODE
-mdf <- mdf %>% mutate(label = factor(paste(str_extract(variable, "[:digit:]{1,2}"), "hr"), 
-                                     levels = paste(seq(1:17), "hr")))
+
 #full scale
-ggplot(mdf, aes(x = interval, y = value, group=label, color=label)) + 
+ggplot(mdf %>% filter(trainhrs != "null"), aes(x = interval, y = accuracy, color=shark)) + 
   geom_point(color = "light gray", alpha = 0.2) +
   lapply(1:40, # NUMBER OF LOESS
          function(i) {
@@ -142,7 +154,10 @@ ggplot(mdf, aes(x = interval, y = value, group=label, color=label)) +
                                        2000),  #NUMBER OF POINTS TO SAMPLE
                                 ], aes(color = factor(shark)), se=FALSE, span = .95, size = 0.2, method = "loess")
          }) +
-  facet_grid(label~shark) + themeo +   guides(color = F) +
+  geom_smooth(data = mdf %>% filter(training == "null"),
+              inherit.aes=F, aes(x = interval, y = accuracy),
+              se = FALSE, span = 0.90, size = 1, method = "loess", linetype = "dashed",colour = 'black') +
+  facet_grid(~shark) + themeo +   guides(color = F) +
   labs(x = "AUC Interval (in mins)", y = "Accuracy (inferred from error %age") + 
   scale_x_continuous(expand=c(0,0), breaks = seq(600, 5400, by = 1200), 
                      labels = seq(10, 90, by = 20)) + 
