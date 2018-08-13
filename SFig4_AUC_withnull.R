@@ -104,12 +104,13 @@ saturation <- metric_df_sim %>% select(interval = window, metric3)
 
 
 # load(file = file.path(dd, "fmo_saturate.1.3.12.RData"))
+# load(file = file.path(dd, "fmo_saturate.null.RData"))
 # load(file = file.path(dd, "pr.saturation.1.3.12.RData"))
+# load(file = file.path(dd, "pr.saturation.null.RData"))
 
 
 #PLOTTING
 library(tidyverse)
-sc <- bind_rows(fmo.saturation %>% select(interval, shark, ))
 mdf <- bind_rows(fmo.saturation.null, pr.saturation.null) %>% 
   gather(training, accuracy, -interval, -shark) %>% 
   mutate(shark = factor(shark), training = "null")
@@ -145,6 +146,7 @@ ggplot(data = mdf %>% group_by(shark, training, interval),
   labs(x = "Sampling interval (in mins)", y = "Predictive accuracy (as inferred from AUC)")
 
 #null as single line
+window_max <- 5400 #just over 1.5hr
 set.seed(70-1)
 ggplot(data = mdf %>% filter(training == "ANNpred") %>% 
          group_by(shark, training, interval), 

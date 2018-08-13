@@ -108,6 +108,10 @@ for(j in 4:ncol(modeled)){
 ####
 #PLOTTING
 ####
+load(file.path(dd, "fmo_saturate.1.3.12.RData"))
+load(file.path(dd, "fmo_saturate.null.RData"))
+load(file.path(dd, "pr.saturation.1.3.12.RData"))
+load(file.path(dd, "pr.saturation.null.RData"))
 themeo <-theme_classic()+
   theme(strip.background = element_blank(),
         axis.line = element_blank(),
@@ -118,29 +122,40 @@ themeo <-theme_classic()+
         legend.title=element_blank(),
         strip.text=element_text(hjust=0) )
 
+
+#combine w/ base predictions
+
 #bind data
 mdf <- bind_rows(fmo.saturation, pr.saturation) %>% 
   gather(training, accuracy, -interval, -shark) %>% 
   mutate(shark = factor(shark), 
          trainhrs = factor(str_split(training, "\\.", simplify = T)[,2])) 
+null <- bind_rows(fmo.saturation.null, pr.saturation.null) %>% 
+  mutate(trainhrs = "1hr", training = "null") %>% 
+  select(everything(), accuracy = metric3)
+mdf <- bind_rows(mdf, null) %>% 
+  mutate(trainhrs = fct_shift(factor(trainhrs), n = 1L))
 set.seed(70-1)
-ggplot(data = mdf %>% group_by(shark, trainhrs, interval), 
+ggplot(data = mdf %>% group_by(shark, trainhrs, interval) %>% 
+         filter(training != "null"), 
        aes(x = interval, y = accuracy, group=trainhrs, color=shark)) + 
-  geom_point(data = mdf %>% group_by(shark, trainhrs, interval) %>% sample_n(100),
+  geom_point(data = mdf %>% group_by(shark, trainhrs, interval) %>% 
+               filter(training != "null") %>% sample_n(100),
              color = "light gray", alpha = 0.2) +
   lapply(1:50, # NUMBER OF LOESS
          function(i) {
            # geom_smooth(data=mdf[sample(1:nrow(mdf), 
            #                             2000),  #NUMBER OF POINTS TO SAMPLE
            #                      ], se=FALSE, span = .95, size = 0.2, method = "loess") 
-           geom_smooth(data=(mdf %>% group_by(shark, trainhrs, interval) %>% sample_n(4)),  #NUMBER OF POINTS TO SAMPLE
+           geom_smooth(data=(mdf %>% group_by(shark, trainhrs, interval) %>% filter(training != "null") %>% sample_n(4)),  #NUMBER OF POINTS TO SAMPLE
                        aes(x = interval, y = accuracy), se=FALSE, span = .90, size = 0.2, method = "loess")
            # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
            #             se=FALSE, span = .95, size = 0.2, method = "loess")
          }) +
-  # geom_line(data = mdf %>% group_by(variable, interval) %>% 
-  #             summarize(sd = sd(value)), aes(x = interval, y = 1-sd), color = 'black')+
-  facet_grid(fct_shift(trainhrs, n = 1L)~shark) +
+  geom_smooth(data = mdf %>% filter(training == "null"),
+              inherit.aes=F, aes(x = interval, y = accuracy),
+              se = FALSE, span = 0.90, size = 1, method = "loess", linetype = "dashed",colour = 'black') +
+  facet_grid(trainhrs~shark) +
   themeo + guides(color = F) +
   scale_x_continuous(expand=c(0,0), limits = c(0, window_max), breaks = seq(600, window_max, length.out = 5), labels = c("10","30","50","70","90")) +
   scale_y_continuous(limits = c(0.5, 1.0), breaks=seq(0.5,1.0, length.out=5)) + 
