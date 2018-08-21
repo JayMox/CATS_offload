@@ -32,5 +32,11 @@ pr.swap = pr.saturation %>%
   
 #get loess curve of null prediction
 #see here: https://stackoverflow.com/questions/9789871/method-to-extract-stat-smooth-line-fit
-qplot(interval, pred, data = fmo.null) + 
-  stat_smooth(se = FALSE, span = 0.90, size = 2, method = "loess")
+ggplot() +
+  geom_point(data = fmo.null %>% group_by(interval),
+             aes(x = interval, y = pred), alpha = 0.6)+
+  geom_smooth(data = fmo.null %>% group_by(interval), 
+              aes(x = interval, y = pred, color = 'grey'), 
+              se = FALSE, span = 0.90, size = 2, method = "loess") +
+  scale_y_continuous(breaks = seq(0.5,1.0,.05))
+##DOES NOT MATCH PREVIOUS FIGURE. 
