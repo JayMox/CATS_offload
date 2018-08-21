@@ -1,4 +1,5 @@
 #Fxns for tag processing, primarily CATS Camera & Diary tags
+require(ggplot2)
 
 #fxn to calculate the mean of a set of data
 Mode <- function(x){
@@ -236,7 +237,7 @@ nighttime <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
   df <- data.frame(
     down = sunriset(loc, dates, 
                     direction="sunset", POSIXct.out = TRUE)$time,
-    up = sunriset(loc, dates + days(1), 
+    up = sunriset(loc, dates + (60*60*24), 
                   direction="sunrise", POSIXct.out = TRUE)$time
   )
   return(df)
