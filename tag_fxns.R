@@ -1,5 +1,7 @@
 #Fxns for tag processing, primarily CATS Camera & Diary tags
 require(ggplot2)
+require(plotly)
+require(data.table)
 
 #fxn to calculate the mean of a set of data
 Mode <- function(x){
@@ -178,7 +180,7 @@ eda.plot <- function(df2){
 #function to append a vector of day/night times
 ##https://www.rdocumentation.org/packages/maptools/versions/0.6-5/topics/sunriset-methods
 #based on sunriset(), defaults coordinates of MBay Inner Buoy
-add_night <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
+add_night <- function(dts, loc = NULL){
   if(as.numeric(max(dts)-min(dts)) > 30){print("long deployment; method not quite adequate")}
   #NB: not adequate for multi-month deployments if 
   #sunrise/sunset will change dramatically over time
@@ -186,12 +188,18 @@ add_night <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
   require(sp)
   
   #default to middle of monty bay
-  if(class(loc) != "SpatialPoints"){
-    coord = matrix(c(-122.029, 36.751), nrow=1)
+  if(is.null(loc)){
+    print("no loc provided")
+    print("DEFAULTING TO MONTY BAY BUOY")
+    loc = matrix(c(-122.029, 36.751))
+    coord = matrix(loc, nrow=1)
     #https://www.ndbc.noaa.gov/station_page.php?station=46092
     loc = SpatialPoints(coord, proj4string=CRS("+proj=longlat +datum=WGS84"))
-    print("loc provided was not SpatialPoints class")
-    print("DEFAULTING TO MONTY BAY BUOY")
+  }else{
+    print(paste("lat coord used is ", loc[2]))
+    print(paste("lon coord used is ", loc[1]))
+    coord = matrix(loc, nrow = 1)
+    loc = SpatialPoints(coord, proj4string=CRS("+proj=longlat +datum=WGS84"))
   }
   
   #use mode as a dummy day
