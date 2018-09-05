@@ -74,11 +74,12 @@ declination <- 0.2303834
 heading = heading + pi + declination
 
 #combine & plot
+library(lubridate)
 prhod <- data.frame(pr1hz, heading, odba1hz, 
                     collapse(df$depth, datFreq),
-                    df$dts[seq(1,nrow(df), datFreq)])
-colnames(prhod) = c("pitch", "roll", "heading", "odba", "depth", "dts")
-idx <- seq(6000, 520000, 1)
+                    df$dts[seq(1,nrow(df), datFreq)]-hours(7))
+colnames(prhod) = c("pitch", "roll", "heading", "odba", "depth", "dts.loc")
+idx <- seq(6000, 520000, 1) #tagon clip
 prhod <- prhod[idx,]
 library(magrittr)
 library(ggplot2)
@@ -88,9 +89,9 @@ library(lubridate)
 prhod$night <- add_night(prhod$dts)
 (nights <- nighttime(prhod$dts))
 
-(p <- prhod[seq(1,nrow(prhod),by=120),] %>% ggplot(aes(x = dts, y = 0-depth)) + 
+(p <- prhod[seq(1,nrow(prhod),by=120),] %>% ggplot(aes(x = dts.loc, y = 0-depth)) + 
   geom_line() +
-  geom_rect(data = nights[1:6,], inherit.aes=FALSE, aes(xmin = down, xmax = up, ymin = -Inf, ymax = Inf), alpha =0.3)+
+  geom_rect(data = nights[1:6,], inherit.aes=FALSE, aes(xmin = down-hours(7), xmax = up-hours(7), ymin = -Inf, ymax = Inf), alpha =0.3)+
     themeo)
 varh = rollapply(prhod$heading,
                  width = 75, 
@@ -105,28 +106,55 @@ p + geom_point(data =
   labs(title = "mag headings, APT-cc0705-20180718")
 
 #select different headings during nighttime behavior
-prhod %>% ggplot(aes(x = dts, y = heading))+geom_line() + 
+prhod %>% ggplot(aes(x = dts.loc, y = heading))+geom_line() + 
   geom_rect(data = nights[1:6,], inherit.aes=FALSE, 
-            aes(xmin = down, xmax = up, ymin = -Inf, ymax = Inf), 
+            aes(xmin = down-hours(7), xmax = up-hours(7), ymin = -Inf, ymax = Inf), 
             alpha =0.3) + 
-  geom_hline(yintercept = c(0.34, 3.5))
+  geom_hline(yintercept = c(0.34, 3.5), color = "red", size = 2)+
+  annotate(geom="text", x = min(prhod$dts.loc), y=c(0.34, 3.5), 
+           size = 3,label=c("NNE", "SSW"))
 
 #distributions by 1/4day 
 #cuts are 03,09,15,21 (straddles midday)
 #add 3 to make cleaner breaks, so that 1 is 3hrs on either side of midnight
-prhod$qday <- as.numeric(cut(
-  ifelse((hour(prhod$dts)-7) + 3 >= 24, 
-         (hour(prhod$dts)-7) + 3-24, 
-         (hour(prhod$dts)-7) + 3),
-  breaks=c(0,6,12,18,26)))
-mdf.prh <- tidyr::gather(prhod, var, val, -dts, -qday)
+prhod$qday <- as.numeric(cut(hour(prhod$dts.loc),
+  breaks=c(00,03,09,15,21,24), include.lowest = T, left = T))
+prhod$qday <- ifelse(prhod$qday == 5, 1, prhod$qday)  #wrap around midnight
+prhod$sday <- as.numeric(cut(hour(prhod$dts.loc),
+                             breaks=c(00,02,06,10,14,18,22,24),
+                             include.lowest=T, right = T))
+prhod$sday <- ifelse(prhod$sday == 7, 1, prhod$sday)
+#double check
+prhod %>% dplyr::sample_frac(0.50) %>% ggplot() + 
+  geom_histogram(aes(x = hour(dts.loc), fill = factor(sday))) + 
+  scale_x_continuous(breaks = 0:24, labels = 0:24)
+
+mdf.prh <- tidyr::gather(prhod, 
+                         var, val, -dts.loc, -qday, -sday, -night)
 mdf.prh %>% ggplot() + 
   geom_histogram(aes(x = val, fill = qday), alpha = 0.6)+
   facet_wrap(hour(dts)~var)+
   coord_polar()
 
-mdf.prh %>% dplyr::filter(var %in% c("pitch", "roll", "heading")) %>%
-  ggplot() + 
+#plot prh across qtrdays
+vars <- c('pitch', 'roll', 'heading')
+p <- list(NULL)
+for(i in 1:length(vars)){
+  dat <- mdf.prh %>% dplyr::filter(var == vars[i]) %>% 
+    dplyr::mutate(hr = factor(hour(dts.loc)))
+  (p[[i]] <- dat %>% ggplot() + 
+    geom_histogram(aes(x = val, fill = hr), alpha = 0.8)+
+    facet_wrap(~hr) + 
+    coord_polar() +
+    labs(title = "headings of cc0705-20180718")
+    #+ theme(panel.background=element_blank())
+  
+  )
+}
+library(gridExtra)
+grid.arrange(p[[1]], p[[2]], p[[3]], nrow = 3)
+p[[3]]
+ggplot() + 
   geom_histogram(aes(x = val, fill = qday), alpha = 0.6)+
   facet_wrap(var~qday, scales = "free")+
   coord_polar()
