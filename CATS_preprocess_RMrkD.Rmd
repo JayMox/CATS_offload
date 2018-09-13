@@ -1,0 +1,50 @@
+---
+title: "CATS_cam_EDA"
+author: "JHMoxley"
+date: "9/13/2018"
+output: pdf_document
+params: 
+  dir: 
+  deployID: "APT_CC0705_07182018"   #deployment key
+  datFreq: 50 #Hz                   #motion sensing sampling res
+  datFreq.desired: 1 #Hz            #downsampled res                
+  SI: TRUE                          #extract files from SI converted dB
+---
+This is a generalized EDA document for quickly working up biologging deployments returned from CATS tags on White Sharks.  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("tag_fxns.R")
+library(here)
+set_here("/Volumes/Avalon")
+
+#convert data read in to a fxn in tag_fxns.R
+#how to select field?  
+
+load.in2 <- function(dir, SI = T){
+  #more robust load in fxn for identifying files in dir & loading in select fields w/ fread
+  dd <- ifelse(isTRUE(SI), 
+               params$deployID
+               file.path(dir, "SI_*")
+}
+dir <- "/Volumes/Avalon"  
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
