@@ -320,6 +320,29 @@ nighttime <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
   return(df)
 }
 
+#function to plot TDR trace w/ temp points
+#x is a data frame of depth, time, 
+ttdr.plot <- function(x){
+  as.data.frame(x) %>% ggplot(aes(x = dts, y = 0-depth)) + 
+     geom_line(alpha = 0.2) +
+     geom_point(aes(color = temp.dep))+
+     #geom_hline(aes(yintercept = 0))+
+     geom_hline(aes(yintercept = 0))+
+     scale_color_gradient2(low = "blue", mid="green2", high = "red", midpoint = 15,
+                           limits = c(10, 30), breaks = seq(10,32.5,2.5),
+                           name= "Temp C", labels = as.character(seq(10,32.5,2.5)))+
+     # geom_rect(data = nights[1:6,], inherit.aes=FALSE, aes(xmin = down-hours(7), xmax = up-hours(7), 
+     #                                                       ymin = -Inf, ymax = Inf), alpha =0.3)+
+     #geom_bar(data = nights, inherit.aes=FALSE,aes(x = dts, y = Inf)) + 
+     #scale_x_datetime(date_breaks = "hours")+
+     scale_y_continuous(breaks = seq(0, -30, by = -5), labels = seq(0,30,5))+
+     labs(title = "Depth-Temperature record", y = "depth (m)", x = "") + 
+     themeo + theme(title = element_text(size = 24),
+                    legend.text = element_text(size = 16),
+                    axis.text = element_text(angle = 0, hjust = 0.5, size = 14),
+                    axis.title = element_text(size=18))
+}
+
 #function to tally secs since midnight
 secs_midnight <- function(dts){
   return(as.numeric(dts) - 
