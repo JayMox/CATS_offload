@@ -68,7 +68,7 @@ plot(x = 1:nrow(dat$data), y = dat$data$depth, type = "l", main = params$deploy.
 -currently not making explicit call from UI params list
 -where to do pitch/roll (requires accel.. shld mandate accel sensor?)
 
-```{r pressure, echo=FALSE}
+```{r pressure, echo=TRUE}
 library(gRumble)
 if(any(str_detect(params$sensors, "^a|A(?=c|C)"))){
   #isolate gravitation
