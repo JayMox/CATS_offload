@@ -2,15 +2,18 @@
 title: "CATS_cam_EDA"
 author: "JHMoxley"
 date: "9/13/2018"
-output: pdf_document
-params: 
-  dd: "/Volumes/Avalon"               #deploy drive
-  deploy.key: "APT_CC0704_20180803"   #deploy ID
-  datFreq: 50 #Hz                     #motion sensing sampling res
-  datFreq.desired: 1 #Hz              #downsampled res
-  smoothing: 5                        #number seconds to smooth traces
-  SI: FALSE                           #extract files from SI converted dB
-  sensors: !r c("acc", "mag")
+output:
+  html_document: default
+  pdf_document: default
+params:
+  SI: yes
+  datFreq: 50
+  datFreq.desired: 1
+  dd: /Volumes/Avalon
+  deploy.key: APT_CC0704_20180803
+  sensors: c("acc", "mag")
+  smoothing: 5
+  utc.offset: -7
 ---
 This is a generalized EDA document for quickly working up biologging deployments returned from CATS tags on White Sharks.  Test built on APT_CC0705_07182018, based on EDA files associated with this deployment. 
 
@@ -20,6 +23,8 @@ rmarkdown::render('CATS_preprocess_RMrkD.Rmd',params= list( deploy.key = "APT_CC
 params
 ```
 
+##Workup
+-needs to be able to trim data 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -59,19 +64,80 @@ dat$data$temp.dep <- stats::filter(subset(dat$data, select = dat$sensors$temp),
 plot(x = 1:nrow(dat$data), y = dat$data$depth, type = "l", main = params$deploy.key)
 ```
 
-## Acceleartion
-
+## Accelerometry
+-currently not making explicit call from UI params list
+-where to do pitch/roll (requires accel.. shld mandate accel sensor?)
 
 ```{r pressure, echo=FALSE}
 library(gRumble)
-if(any(str_detect(params$sensors, "^a|A")){
+if(any(str_detect(params$sensors, "^a|A(?=c|C)"))){
   #isolate gravitation
   gees <- data.frame(Gsep(as.matrix(subset(dat$data, select = dat$sensors$acc)), 
                           filt = (rep(1, params$smoothing*dat$sensors$sfreq))/(params$smoothing*dat$sensors$sfreq)))
-  g2 <- data.frame(apply(gees, 2, collapse, freq = params$datFreq.desired))
+  #pitchroll
+  pr <- pitchRoll(gees, degrees = F)
+  #downsample
+  g.ds <- data.frame(apply(gees, 2, gRumble::collapse, 
+                         freq = dat$sensors$sfreq/params$datFreq.desired))
+  pr.ds <- data.frame(apply(pr, 2, gRumble::collapse, 
+                         freq = dat$sensors$sfreq/params$datFreq.desired))
 }else{
   warning("ACCEL SENSORS WERE NOT INCLUDED IN PARAMS")
 }
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Magnetometry
+-based on an email with CFW, 9/5/2018
+-not confirmed this works in raw units
+-need to double check declination adjustment
+```{r}
+if(any(str_detect(params$sensors, "^m|M(?=a|A)"))){
+  #PUT THIS IN TAG_FXNS?
+  err <- function(vars){
+    #seq call is rough/tumble downsample to speed things up
+    m <- as.matrix(subset(dat$data, select=dat$sensors$mag))
+    return(sd(((m[seq(1, nrow(m), dat$sensors$sfreq),1] - vars[1]^2)+  #mx
+           m[seq(1, nrow(m), dat$sensors$sfreq),2] - vars[2]^2)+       #my
+           m[seq(1, nrow(m), dat$sensors$sfreq),3] - vars[3]^2))}     #mz
+    
+  out <- optim(c(1,1,1), fn = err)  #out$par is the center of the mag data
+  
+  mmms <- data.frame(Gsep(as.matrix(subset(dat$data, select = dat$sensors$mag)), 
+                          filt = (rep(1, params$smoothing*dat$sensors$sfreq))/(params$smoothing*dat$sensors$sfreq)))
+  #downsample
+  m.ds <- data.frame(apply(mmms, 2, collapse, 
+                         freq = dat$sensors$sfreq/params$datFreq.desired))
+  
+  #calc heading
+  h.ds <- magHead(PR = pr.ds, magxyz = m.ds, magOff = out$par)
+  #declination at santa cruz ~13.2 deg
+  declination <- DescTools::DegToRad(13.2)
+  print("USING DECLINATION ANGLE FOR SANTA CRUZ")
+  h.ds <- h.ds + pi + declination
+}else{
+  warning("MAG SENSORS WERE NOT INCLUDED IN PARAMS")
+}
+```
+
+##GYROMETER
+in dev now
+```{r}
+if(any(str_detect(params$sensors, "^g|G(?=y|Y)"))){
+  #IN DEV
+}else{
+  warning("GYRO SENSORS WERE NOT INCLUDED IN PARAMS")
+}
+```
+
+##PLOTS
+-ttdr plot needs added functionality for local offsets
+```{r}
+library(lubridate)
+x <- as.data.frame(cbind(dts = dat$data$dts[seq(1, nrow(dat$data), dat$sensors$sfreq/params$datFreq.desired)],
+                   apply(subset(dat$data, select = c("depth", "temp.dep")), 2, collapse, 
+                         freq = dat$sensors$sfreq/params$datFreq.desired)))
+ttdr <- ttdr.plot(x)
+ttdr
+```
+
