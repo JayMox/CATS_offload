@@ -9,6 +9,75 @@ Mode <- function(x){
   ux[which.max(tabulate(match(x,ux)))]
 }
 
+load.in2 <- function(dir, sensors = c("acc"), fstop = NA){
+  #more robust load in fxn for identifying files in dir & loading in select fields w/ fread
+  #sensors is for any cols other than basic, use UTC for UTC date/time; local for local date/time
+  #fstop lets you control how many files to read in, for troubleshooting
+  
+  #get files
+  files <- list.files(dir, pattern = "*.csv", full.names = T); 
+  print(paste(length(files), "CSVs found in dir", dir))
+  
+  #manip fields & units
+  flds <- as.vector(
+    str_split(readLines(files[1], n = 1, encoding = "latin1"), ",", simplify=T))
+  units <- str_extract(flds, "\\[.*\\]?")
+  fields <- str_trim(str_replace(flds, "\\[.*\\]?", ""), "right")
+  
+  #get sensors 
+  s.idx <- sapply(tolower(append(c("depth", "UTC", "temp"), sensors)), 
+                  function(x) str_which(tolower(fields), x))
+  s.names <- sapply(tolower(append(c("depth", "UTC", "temp"), sensors)), 
+                    function(x) str_subset(tolower(fields), x))
+  ##WHICH DO I WANT
+  print(paste("EXTRACTING THESE SENSORS:", unlist(s.names)))
+  
+  ####
+  #read in data
+  #####
+  require(data.table)
+  d <- NULL
+  df <- NULL
+  end <- ifelse(is.na(fstop), length(files), fstop)
+  if(!is.na(fstop)){ warning("TRUNCATING READ IN AT FILE NUMBER END")}
+  options(digits.secs=3)
+  for(i in 1:end){
+    #check if rows grows
+    rwchk <- nrow(df)
+    
+    d <- data.table::fread(files[i], 
+                           select = sort(unlist(s.idx)), 
+                           col.names = tolower(fields[sort(unlist(s.idx))]), 
+                           data.table = F)
+    
+    #manip objects
+    d$dts <- as.POSIXct(paste(d[,s.idx$utc[1]], d[,s.idx$utc[2]]), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
+    #NO LOCAL FUNCTIONALITY
+    
+    df <- rbind(df, d)
+    #check that df was updated
+    ifelse(rwchk != nrow(df), 
+           print(paste(i, "of", length(files), "appended to data frame")),
+           print(paste("issues ingesting file", i, "into data frame")))
+  }
+  #summarize
+  print(paste(nrow(df), "rows read into data frame"))
+  print(paste("over a period of", min(df$dts), "and", max(df$dts)))
+  ##estimate length of deployment, etc.
+  ##GET CODE FROM OTHER files?
+  
+  #batton up the bits
+  units <- c(units[sort(unlist(s.idx))], paste0(sFreq(df$dts, 100), "Hz"))
+  s.names$sfreq <- sFreq(df$dts, 100)
+  s.idx <- sort(unlist(s.idx))  
+  return(list(data = as.data.table(df),
+              units = units,
+              sensors = s.names,
+              raw.cidx = s.idx,
+              raw.fields = flds
+  ))
+}
+
 #fxn to do things temporarily inside a directory
 #see here: https://stackoverflow.com/questions/26825000/in-r-do-an-operation-temporarily-using-a-setting-such-as-working-directory
 with_dir <- function(dir, expr) {

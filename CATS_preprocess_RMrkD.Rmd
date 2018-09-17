@@ -4,39 +4,46 @@ author: "JHMoxley"
 date: "9/13/2018"
 output: pdf_document
 params: 
-  dir: 
-  deployID: "APT_CC0705_07182018"   #deployment key
-  datFreq: 50 #Hz                   #motion sensing sampling res
-  datFreq.desired: 1 #Hz            #downsampled res                
-  SI: TRUE                          #extract files from SI converted dB
+  dd: "/Volumes/Avalon"               #deploy drive
+  deploy.key: "APT_CC0704_20180803"   #deploy ID
+  datFreq: 50 #Hz                     #motion sensing sampling res
+  datFreq.desired: 1 #Hz              #downsampled res
+  smoothing: 5                        #number seconds to smooth traces
+  SI: FALSE                           #extract files from SI converted dB
+  sensors: !r c("acc", "mag")
 ---
-This is a generalized EDA document for quickly working up biologging deployments returned from CATS tags on White Sharks.  
+This is a generalized EDA document for quickly working up biologging deployments returned from CATS tags on White Sharks.  Test built on APT_CC0705_07182018, based on EDA files associated with this deployment. 
+
+rmarkdown::render('CATS_preprocess_RMrkD.Rmd',params= list( deploy.key = "APT_CC0705_07182018"))
+
+```{r}
+params
+```
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 source("tag_fxns.R")
-library(here)
-set_here("/Volumes/Avalon")
+library(tidyverse)
+setwd(file.path(params$dd, params$deploy.key))
+#create EDA folder??
 
-#convert data read in to a fxn in tag_fxns.R
-#how to select field?  
-
-load.in2 <- function(dir, SI = T){
-  #more robust load in fxn for identifying files in dir & loading in select fields w/ fread
-  dd <- ifelse(isTRUE(SI), 
-               params$deployID
-               file.path(dir, "SI_*")
-}
-dir <- "/Volumes/Avalon"  
+#load in data
+ifelse(isTRUE(params$SI), 
+       print("reading in SI converted data"),
+       print("reading in RAW data"))
+dat <- load.in2(dir = ifelse(isTRUE(params$SI),
+             str_subset(list.dirs(), "(SI)"),
+             getwd()), 
+             sensors = params$sensors, fstop = 2)
 ```
 
-## R Markdown
+## Smoothing, isolation & manipulation
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+library(gRumble)
+df <- dat$dat
+dat$dat$depth <- stats::filter(subset(dat$dat, select = dat$sensors$depth[1]))
 ```
 
 ## Including Plots
