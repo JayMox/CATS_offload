@@ -27,6 +27,7 @@ source("tag_fxns.R")
 library(tidyverse)
 setwd(file.path(params$dd, params$deploy.key))
 #create EDA folder??
+#good way to track what generation of tag fxns it used?  
 
 #load in data
 ifelse(isTRUE(params$SI), 
@@ -41,17 +42,36 @@ dat <- load.in2(dir = ifelse(isTRUE(params$SI),
 ## Smoothing, isolation & manipulation
 
 ```{r}
-library(gRumble)
 df <- dat$dat
-dat$dat$depth <- stats::filter(subset(dat$dat, select = dat$sensors$depth[1]))
+#smooth depth
+dat$data$depth <- stats::filter(subset(dat$data, select = dat$sensors$depth[1]),
+                               filter = rep(1,params$smoothing*dat$sensors$sfreq)/
+                                 (params$smoothing*dat$sensors$sfreq), sides = 2, circular = T)
+#smooth temp reading from depth sensor
+dat$data$temp.dep <- stats::filter(subset(dat$data, select = dat$sensors$depth[2]),
+                               filter = rep(1,params$smoothing*dat$sensors$sfreq)/
+                                 (params$smoothing*dat$sensors$sfreq), sides = 2, circular = T)
+#smooth temp imu
+dat$data$temp.dep <- stats::filter(subset(dat$data, select = dat$sensors$temp),
+                               filter = rep(1,params$smoothing*dat$sensors$sfreq)/
+                                 (params$smoothing*dat$sensors$sfreq), sides = 2, circular = T)
+
+plot(x = 1:nrow(dat$data), y = dat$data$depth, type = "l", main = params$deploy.key)
 ```
 
-## Including Plots
+## Acceleartion
 
-You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+library(gRumble)
+if(any(str_detect(params$sensors, "^a|A")){
+  #isolate gravitation
+  gees <- data.frame(Gsep(as.matrix(subset(dat$data, select = dat$sensors$acc)), 
+                          filt = (rep(1, params$smoothing*dat$sensors$sfreq))/(params$smoothing*dat$sensors$sfreq)))
+  g2 <- data.frame(apply(gees, 2, collapse, freq = params$datFreq.desired))
+}else{
+  warning("ACCEL SENSORS WERE NOT INCLUDED IN PARAMS")
+}
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
