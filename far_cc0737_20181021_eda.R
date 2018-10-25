@@ -69,7 +69,7 @@ library(lubridate)
 #identify time on animal
 on.an <- df %>% ggplot(aes(x = 1:nrow(df), y = 0-depth)) + geom_point()
 ggplotly(on.an)
-idx <- seq(6000, 121000, 1)
+#idx <- seq(6000, 121000, 1)
 #idx <- seq(6000, 520000, 1)
 df$odba2 <- stats::filter(df$odba, filt = rep(1,2)/2) #smooth odba over 2 min
 
@@ -109,12 +109,17 @@ grid.arrange(odba, temp, ncol = 1)
 
 library(plotly)
 #depth, odba, vv races
+idx <- seq(1, 123000, 1)
 (depth <- df[idx,] %>% ggplot(aes(x = dts - hours(7), y = 0-depth)) + geom_line() + themeo +
     labs(y = "depth"))
-(odba <- df[idx, ] %>% ggplot(aes(x = dts-hours(7), y = stats::filter(odba, rep(1,3)/3))) + 
+(odba <- df[idx, ] %>% ggplot(aes(x = dts-hours(7), y = log(odba))) + 
     geom_line() + themeo + labs(y = "odba"))
 df$vv <- c(rep(0), diff(df$depth))
-(vv <- df[idx,] %>% ggplot(aes(x = dts-hours(7), y = vv)) + geom_line() +
+(vv <- df[idx,] %>% ggplot(aes(x = dts-hours(7), y = -vv)) + geom_line() +
     scale_y_continuous(limits=c(-2,2)) + themeo + labs(y = "vertical velocity"))
-grid.arrange(depth, odba, vv)
+(sway <- df[idx,] %>% ggplot(aes(x = dts-hours(7), y = ay)) + geom_line() + themeo)
+grid.arrange(depth, odba, vv, sway, ncol = 1)
 
+
+getwd()
+data.table::fwrite(df, file = file.path(dd, "FAR_CC0737_20181021_ppIGOR.csv"))
