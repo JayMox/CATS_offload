@@ -1,9 +1,81 @@
 #Fxns for tag processing, primarily CATS Camera & Diary tags
+require(ggplot2)
+require(plotly)
+require(data.table)
 
 #fxn to calculate the mean of a set of data
 Mode <- function(x){
   ux <- unique(x)
   ux[which.max(tabulate(match(x,ux)))]
+}
+
+load.in2 <- function(dir, sensors = c("acc"), fstop = NA){
+  #more robust load in fxn for identifying files in dir & loading in select fields w/ fread
+  #sensors is for any cols other than basic, use UTC for UTC date/time; local for local date/time
+  #fstop lets you control how many files to read in, for troubleshooting
+  
+  #get files
+  files <- list.files(dir, pattern = "*.csv", full.names = T); 
+  print(paste(length(files), "CSVs found in dir", dir))
+  
+  #manip fields & units
+  flds <- as.vector(
+    str_split(readLines(files[1], n = 1, encoding = "latin1"), ",", simplify=T))
+  units <- str_extract(flds, "\\[.*\\]?")
+  fields <- str_trim(str_replace(flds, "\\[.*\\]?", ""), "right")
+  
+  #get sensors 
+  s.idx <- sapply(tolower(append(c("depth", "UTC", "temp"), sensors)), 
+                  function(x) str_which(tolower(fields), x))
+  s.names <- sapply(tolower(append(c("depth", "UTC", "temp"), sensors)), 
+                    function(x) str_subset(tolower(fields), x))
+  ##WHICH DO I WANT
+  print(paste("EXTRACTING THESE SENSORS:", unlist(s.names)))
+  
+  ####
+  #read in data
+  #####
+  require(data.table)
+  d <- NULL
+  df <- NULL
+  end <- ifelse(is.na(fstop), length(files), fstop)
+  if(!is.na(fstop)){ warning("TRUNCATING READ IN AT FILE NUMBER END")}
+  options(digits.secs=3)
+  for(i in 1:end){
+    #check if rows grows
+    rwchk <- nrow(df)
+    
+    d <- data.table::fread(files[i], 
+                           select = sort(unlist(s.idx)), 
+                           col.names = tolower(fields[sort(unlist(s.idx))]), 
+                           data.table = F)
+    
+    #manip objects
+    d$dts <- as.POSIXct(paste(d[,s.idx$utc[1]], d[,s.idx$utc[2]]), format = "%d.%m.%Y %H:%M:%OS", tz = "UTC")
+    #NO LOCAL FUNCTIONALITY
+    
+    df <- rbind(df, d)
+    #check that df was updated
+    ifelse(rwchk != nrow(df), 
+           print(paste(i, "of", length(files), "appended to data frame")),
+           print(paste("issues ingesting file", i, "into data frame")))
+  }
+  #summarize
+  print(paste(nrow(df), "rows read into data frame"))
+  print(paste("over a period of", min(df$dts), "and", max(df$dts)))
+  ##estimate length of deployment, etc.
+  ##GET CODE FROM OTHER files?
+  
+  #batton up the bits
+  units <- c(units[sort(unlist(s.idx))], paste0(sFreq(df$dts, 100), "Hz"))
+  s.names$sfreq <- sFreq(df$dts, 100)
+  s.idx <- sort(unlist(s.idx))  
+  return(list(data = as.data.table(df),
+              units = units,
+              sensors = s.names,
+              raw.cidx = s.idx,
+              raw.fields = flds
+  ))
 }
 
 #fxn to do things temporarily inside a directory
@@ -177,7 +249,7 @@ eda.plot <- function(df2){
 #function to append a vector of day/night times
 ##https://www.rdocumentation.org/packages/maptools/versions/0.6-5/topics/sunriset-methods
 #based on sunriset(), defaults coordinates of MBay Inner Buoy
-add_night <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
+add_night <- function(dts, loc = NULL){
   if(as.numeric(max(dts)-min(dts)) > 30){print("long deployment; method not quite adequate")}
   #NB: not adequate for multi-month deployments if 
   #sunrise/sunset will change dramatically over time
@@ -185,12 +257,18 @@ add_night <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
   require(sp)
   
   #default to middle of monty bay
-  if(class(loc) != "SpatialPoints"){
-    coord = matrix(c(-122.029, 36.751), nrow=1)
+  if(is.null(loc)){
+    print("no loc provided")
+    print("DEFAULTING TO MONTY BAY BUOY")
+    loc = matrix(c(-122.029, 36.751))
+    coord = matrix(loc, nrow=1)
     #https://www.ndbc.noaa.gov/station_page.php?station=46092
     loc = SpatialPoints(coord, proj4string=CRS("+proj=longlat +datum=WGS84"))
-    print("loc provided was not SpatialPoints class")
-    print("DEFAULTING TO MONTY BAY BUOY")
+  }else{
+    print(paste("lat coord used is ", loc[2]))
+    print(paste("lon coord used is ", loc[1]))
+    coord = matrix(loc, nrow = 1)
+    loc = SpatialPoints(coord, proj4string=CRS("+proj=longlat +datum=WGS84"))
   }
   
   #use mode as a dummy day
@@ -236,10 +314,33 @@ nighttime <- function(dts, loc = matrix(c(-122.029, 36.751), nrow=1)){
   df <- data.frame(
     down = sunriset(loc, dates, 
                     direction="sunset", POSIXct.out = TRUE)$time,
-    up = sunriset(loc, dates + days(1), 
+    up = sunriset(loc, dates + (60*60*24), 
                   direction="sunrise", POSIXct.out = TRUE)$time
   )
   return(df)
+}
+
+#function to plot TDR trace w/ temp points
+#x is a data frame of depth, time, 
+ttdr.plot <- function(x){
+  as.data.frame(x) %>% ggplot(aes(x = dts, y = 0-depth)) + 
+     geom_line(alpha = 0.2) +
+     geom_point(aes(color = temp.dep))+
+     #geom_hline(aes(yintercept = 0))+
+     geom_hline(aes(yintercept = 0))+
+     scale_color_gradient2(low = "blue", mid="green2", high = "red", midpoint = 15,
+                           limits = c(10, 30), breaks = seq(10,32.5,2.5),
+                           name= "Temp C", labels = as.character(seq(10,32.5,2.5)))+
+     # geom_rect(data = nights[1:6,], inherit.aes=FALSE, aes(xmin = down-hours(7), xmax = up-hours(7), 
+     #                                                       ymin = -Inf, ymax = Inf), alpha =0.3)+
+     #geom_bar(data = nights, inherit.aes=FALSE,aes(x = dts, y = Inf)) + 
+     #scale_x_datetime(date_breaks = "hours")+
+     scale_y_continuous(breaks = seq(0, -30, by = -5), labels = seq(0,30,5))+
+     labs(title = "Depth-Temperature record", y = "depth (m)", x = "") + 
+     themeo + theme(title = element_text(size = 24),
+                    legend.text = element_text(size = 16),
+                    axis.text = element_text(angle = 0, hjust = 0.5, size = 14),
+                    axis.title = element_text(size=18))
 }
 
 #function to tally secs since midnight

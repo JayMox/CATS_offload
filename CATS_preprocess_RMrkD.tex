@@ -1,0 +1,315 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={CATS\_cam\_EDA},
+            pdfauthor={JHMoxley},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{{#1}}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{{#1}}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\ImportTok}[1]{{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{{#1}}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{{#1}}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{{#1}}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{{#1}}}}
+\newcommand{\BuiltInTok}[1]{{#1}}
+\newcommand{\ExtensionTok}[1]{{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{{#1}}}
+\newcommand{\RegionMarkerTok}[1]{{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{{#1}}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{{#1}}}}
+\newcommand{\NormalTok}[1]{{#1}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{CATS\_cam\_EDA}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{JHMoxley}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{9/13/2018}
+
+
+\begin{document}
+\maketitle
+
+This is a generalized EDA document for quickly working up biologging
+deployments returned from CATS tags on White Sharks. Test built on
+APT\_CC0705\_07182018, based on EDA files associated with this
+deployment.
+
+rmarkdown::render(`CATS\_preprocess\_RMrkD.Rmd',params= list( deploy.key
+= ``APT\_CC0705\_07182018''))
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{params}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $dd
+## [1] "/Volumes/Avalon"
+## 
+## $deploy.key
+## [1] "APT_CC0704_20180803"
+## 
+## $utc.offset
+## [1] -7
+## 
+## $datFreq
+## [1] 50
+## 
+## $datFreq.desired
+## [1] 1
+## 
+## $smoothing
+## [1] 5
+## 
+## $SI
+## [1] TRUE
+## 
+## $sensors
+## [1] "acc" "mag"
+\end{verbatim}
+
+\subsection{Workup}\label{workup}
+
+-needs to be able to trim data
+
+\subsection{Smoothing, isolation \&
+manipulation}\label{smoothing-isolation-manipulation}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df <-}\StringTok{ }\NormalTok{dat$dat}
+\CommentTok{#smooth depth}
+\NormalTok{dat$data$depth <-}\StringTok{ }\NormalTok{stats::}\KeywordTok{filter}\NormalTok{(}\KeywordTok{subset}\NormalTok{(dat$data, }\DataTypeTok{select =} \NormalTok{dat$sensors$depth[}\DecValTok{1}\NormalTok{]),}
+                               \DataTypeTok{filter =} \KeywordTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{,params$smoothing*dat$sensors$sfreq)/}
+\StringTok{                                 }\NormalTok{(params$smoothing*dat$sensors$sfreq), }\DataTypeTok{sides =} \DecValTok{2}\NormalTok{, }\DataTypeTok{circular =} \NormalTok{T)}
+\CommentTok{#smooth temp reading from depth sensor}
+\NormalTok{dat$data$temp.dep <-}\StringTok{ }\NormalTok{stats::}\KeywordTok{filter}\NormalTok{(}\KeywordTok{subset}\NormalTok{(dat$data, }\DataTypeTok{select =} \NormalTok{dat$sensors$depth[}\DecValTok{2}\NormalTok{]),}
+                               \DataTypeTok{filter =} \KeywordTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{,params$smoothing*dat$sensors$sfreq)/}
+\StringTok{                                 }\NormalTok{(params$smoothing*dat$sensors$sfreq), }\DataTypeTok{sides =} \DecValTok{2}\NormalTok{, }\DataTypeTok{circular =} \NormalTok{T)}
+\CommentTok{#smooth temp imu}
+\NormalTok{dat$data$temp.dep <-}\StringTok{ }\NormalTok{stats::}\KeywordTok{filter}\NormalTok{(}\KeywordTok{subset}\NormalTok{(dat$data, }\DataTypeTok{select =} \NormalTok{dat$sensors$temp),}
+                               \DataTypeTok{filter =} \KeywordTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{,params$smoothing*dat$sensors$sfreq)/}
+\StringTok{                                 }\NormalTok{(params$smoothing*dat$sensors$sfreq), }\DataTypeTok{sides =} \DecValTok{2}\NormalTok{, }\DataTypeTok{circular =} \NormalTok{T)}
+
+\KeywordTok{plot}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{:}\KeywordTok{nrow}\NormalTok{(dat$data), }\DataTypeTok{y =} \NormalTok{dat$data$depth, }\DataTypeTok{type =} \StringTok{"l"}\NormalTok{, }\DataTypeTok{main =} \NormalTok{params$deploy.key)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CATS_preprocess_RMrkD_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\subsection{Accelerometry}\label{accelerometry}
+
+-currently not making explicit call from UI params list -where to do
+pitch/roll (requires accel.. shld mandate accel sensor?)
+
+\begin{verbatim}
+## 
+## Attaching package: 'gRumble'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:dplyr':
+## 
+##     collapse
+\end{verbatim}
+
+\subsection{Magnetometry}\label{magnetometry}
+
+-based on an email with CFW, 9/5/2018 -not confirmed this works in raw
+units -need to double check declination adjustment
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{if(}\KeywordTok{any}\NormalTok{(}\KeywordTok{str_detect}\NormalTok{(params$sensors, }\StringTok{"^m|M(?=a|A)"}\NormalTok{)))\{}
+  \CommentTok{#PUT THIS IN TAG_FXNS?}
+  \NormalTok{err <-}\StringTok{ }\NormalTok{function(vars)\{}
+    \CommentTok{#seq call is rough/tumble downsample to speed things up}
+    \NormalTok{m <-}\StringTok{ }\KeywordTok{as.matrix}\NormalTok{(}\KeywordTok{subset}\NormalTok{(dat$data, }\DataTypeTok{select=}\NormalTok{dat$sensors$mag))}
+    \KeywordTok{return}\NormalTok{(}\KeywordTok{sd}\NormalTok{(((m[}\KeywordTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(m), dat$sensors$sfreq),}\DecValTok{1}\NormalTok{] -}\StringTok{ }\NormalTok{vars[}\DecValTok{1}\NormalTok{]^}\DecValTok{2}\NormalTok{)+}\StringTok{  }\CommentTok{#mx}
+\StringTok{           }\NormalTok{m[}\KeywordTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(m), dat$sensors$sfreq),}\DecValTok{2}\NormalTok{] -}\StringTok{ }\NormalTok{vars[}\DecValTok{2}\NormalTok{]^}\DecValTok{2}\NormalTok{)+}\StringTok{       }\CommentTok{#my}
+\StringTok{           }\NormalTok{m[}\KeywordTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(m), dat$sensors$sfreq),}\DecValTok{3}\NormalTok{] -}\StringTok{ }\NormalTok{vars[}\DecValTok{3}\NormalTok{]^}\DecValTok{2}\NormalTok{))\}     }\CommentTok{#mz}
+    
+  \NormalTok{out <-}\StringTok{ }\KeywordTok{optim}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{), }\DataTypeTok{fn =} \NormalTok{err)  }\CommentTok{#out$par is the center of the mag data}
+  
+  \NormalTok{mmms <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\KeywordTok{Gsep}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(}\KeywordTok{subset}\NormalTok{(dat$data, }\DataTypeTok{select =} \NormalTok{dat$sensors$mag)), }
+                          \DataTypeTok{filt =} \NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{, params$smoothing*dat$sensors$sfreq))/(params$smoothing*dat$sensors$sfreq)))}
+  \CommentTok{#downsample}
+  \NormalTok{m.ds <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\KeywordTok{apply}\NormalTok{(mmms, }\DecValTok{2}\NormalTok{, collapse, }
+                         \DataTypeTok{freq =} \NormalTok{dat$sensors$sfreq/params$datFreq.desired))}
+  
+  \CommentTok{#calc heading}
+  \NormalTok{h.ds <-}\StringTok{ }\KeywordTok{magHead}\NormalTok{(}\DataTypeTok{PR =} \NormalTok{pr.ds, }\DataTypeTok{magxyz =} \NormalTok{m.ds, }\DataTypeTok{magOff =} \NormalTok{out$par)}
+  \CommentTok{#declination at santa cruz ~13.2 deg}
+  \NormalTok{declination <-}\StringTok{ }\NormalTok{DescTools::}\KeywordTok{DegToRad}\NormalTok{(}\FloatTok{13.2}\NormalTok{)}
+  \KeywordTok{print}\NormalTok{(}\StringTok{"USING DECLINATION ANGLE FOR SANTA CRUZ"}\NormalTok{)}
+  \NormalTok{h.ds <-}\StringTok{ }\NormalTok{h.ds +}\StringTok{ }\NormalTok{pi +}\StringTok{ }\NormalTok{declination}
+\NormalTok{\}else\{}
+  \KeywordTok{warning}\NormalTok{(}\StringTok{"MAG SENSORS WERE NOT INCLUDED IN PARAMS"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "USING DECLINATION ANGLE FOR SANTA CRUZ"
+\end{verbatim}
+
+\subsection{GYROMETER}\label{gyrometer}
+
+in dev now
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{if(}\KeywordTok{any}\NormalTok{(}\KeywordTok{str_detect}\NormalTok{(params$sensors, }\StringTok{"^g|G(?=y|Y)"}\NormalTok{)))\{}
+  \CommentTok{#IN DEV}
+\NormalTok{\}else\{}
+  \KeywordTok{warning}\NormalTok{(}\StringTok{"GYRO SENSORS WERE NOT INCLUDED IN PARAMS"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: GYRO SENSORS WERE NOT INCLUDED IN PARAMS
+\end{verbatim}
+
+\subsection{PLOTS}\label{plots}
+
+-ttdr plot needs added functionality for local offsets
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(lubridate)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'lubridate'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:data.table':
+## 
+##     hour, isoweek, mday, minute, month, quarter, second, wday,
+##     week, yday, year
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:base':
+## 
+##     date
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{x <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{cbind}\NormalTok{(}\DataTypeTok{dts =} \NormalTok{dat$data$dts[}\KeywordTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(dat$data), dat$sensors$sfreq/params$datFreq.desired)],}
+                   \KeywordTok{apply}\NormalTok{(}\KeywordTok{subset}\NormalTok{(dat$data, }\DataTypeTok{select =} \KeywordTok{c}\NormalTok{(}\StringTok{"depth"}\NormalTok{, }\StringTok{"temp.dep"}\NormalTok{)), }\DecValTok{2}\NormalTok{, collapse, }
+                         \DataTypeTok{freq =} \NormalTok{dat$sensors$sfreq/params$datFreq.desired)))}
+\NormalTok{ttdr <-}\StringTok{ }\KeywordTok{ttdr.plot}\NormalTok{(x)}
+\NormalTok{ttdr}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CATS_preprocess_RMrkD_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+
+\end{document}
