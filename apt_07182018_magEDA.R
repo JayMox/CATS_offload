@@ -1,4 +1,5 @@
-dd <- "/Volumes/WHITE SHARK/CA2018/APT_CC0705_07182018/SI_conversion"
+#dd <- "/Volumes/WHITE SHARK/CA2018/APT_CC0705_07182018/SI_conversion"
+dd <- 
 files <- list.files(dd, pattern=("*.csv"),full.names = T); length(files)
 #files <- files[-3]
 #issues with file 3?
