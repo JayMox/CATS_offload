@@ -1,5 +1,6 @@
-##full suite EDA of Oct 21 2018 deployment CC-0737 on 17ft animal (step-notch) at SEFI
+##full suite EDA of Oct 21 2018 deployment CC-0737 on 17.5ft animal (step-notch) at SEFI
 ##tag deployed for 4 days, released in 2, recorded video 10 minutes of every day light hour 
+##phid FAR18102101
 source('tag_fxns.R')
 dd <- "/Volumes/AVALON/FAR_CC0737_20181021/SI"
 files <- list.files(dd, pattern=("*.csv"),full.names = T); length(files)
