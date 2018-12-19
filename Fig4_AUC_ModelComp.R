@@ -108,9 +108,28 @@ pr.saturation %>%
   gather(method, accuracy, -interval) %>% 
   ggplot() + 
   geom_point(aes(x = interval, y = accuracy, color = method))+ 
-  geom_smooth(aes(x = interval, y = accuracy, color = method, group = method), se = F)
+  geom_smooth(aes(x = interval, y = accuracy, color = method, group = method), se = F) + 
+  themeo
 
 mdf <- pr.saturation %>% 
-  gather(method, accuracy, -interval, -shark) %>% 
-  mutate(shark = factor(shark), 
-         trainhrs = factor(str_split(training, "\\.", simplify = T)[,2])) 
+  gather(method, accuracy, -interval, -shark)
+set.seed(70-1)
+ggplot(data = mdf %>% group_by(interval),
+       aes(x = interval, y = accuracy, group=method, color=method)) + 
+  geom_point(data = mdf %>% group_by(interval, method) %>% sample_n(100),
+             color = "light gray", alpha = 0.2) +
+  lapply(1:50, # NUMBER OF LOESS
+         function(i) {
+           # geom_smooth(data=mdf[sample(1:nrow(mdf), 
+           #                             2000),  #NUMBER OF POINTS TO SAMPLE
+           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess") 
+           geom_smooth(data=(mdf %>% group_by(interval) %>% sample_n(4)),  #NUMBER OF POINTS TO SAMPLE
+                       aes(x = interval, y = accuracy, color = method), se=FALSE, span = .90, size = 0.2, method = "loess")
+           # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
+           #             se=FALSE, span = .95, size = 0.2, method = "loess")
+         }) +
+  facet_wrap(~method) +
+  themeo + guides(color = F) +
+  scale_x_continuous(expand=c(0,0), limits = c(0, window_max), breaks = seq(600, window_max, length.out = 5), labels = c("10","30","50","70","90")) +
+  scale_y_continuous(limits = c(0.5, 1.0), breaks=seq(0.5,1.0, length.out=5)) + 
+  labs(x = "Sampling interval (in mins)", y = "Predictive accuracy (as inferred from AUC)")
