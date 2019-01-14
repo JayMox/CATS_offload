@@ -33,8 +33,18 @@ test <- read.csv(file.path(dd, "PR161108_ODBA_6hrTest_obs_pred_1hrTrain_multiple
          pred.lr = ODBA.LR.1hr) %>% 
   filter(!is.na(time.sec)) #%>%
   #mutate(id = "pr", shark = "Shark 1", tuning = "native")
+gen <- read.csv(file.path(dd, "Shark2_ODBA_6hrTest_pred_with_Shark1_multiple_models.csv")) %>% 
+  select(time.sec, depth, obs = ODBA.obs,
+         pred.ann.gen = ODBA.ANN.1hr, 
+         pred.rf.gen = ODBA.RF.1hr,
+         pred.svm.gen = ODBA.SVM.1hr,
+         pred.xgb.gen = ODBA.XGB.1hr,
+         pred.lr.gen = ODBA.LR.1hr,
+         pred.ann = ODBA.ANN_native.1hr
+         ) %>% 
+  filter(!is.na(time.sec))
 
-modeled <- test
+modeled <- gen
 saturation = NULL
 #window_max <- 10000 # in seconds
 window_max <- 5400 #just over 1.5hr
@@ -96,9 +106,10 @@ for(j in 4:ncol(modeled)){
 }
 # pr.saturation <- mutate(saturation, shark = "Shark 1")
 # save(pr.saturation, file = file.path(dd, "pr.saturation.1.ModelComp.RData"))
-
+##GENERAL CASE
+#pr.saturation.gen <- mutate(saturation, shark = "Shark 1")
+#save(pr.saturation.gen, file =file.path(dd, "pr.saturation.1.genModelComp.RData"))
 #plotting
-load(file.path(dd, "pr.saturation.1.ModelComp.RData"))
 pr.saturation %>% 
   group_by(interval) %>% 
   summarize(ann = mean(pred.ann),
@@ -129,6 +140,50 @@ ggplot(data = mdf %>% group_by(interval),
            #             se=FALSE, span = .95, size = 0.2, method = "loess")
          }) +
   facet_wrap(~method) +
+  themeo + guides(color = F) +
+  scale_x_continuous(expand=c(0,0), limits = c(0, window_max), breaks = seq(600, window_max, length.out = 5), labels = c("10","30","50","70","90")) +
+  scale_y_continuous(limits = c(0.5, 1.0), breaks=seq(0.5,1.0, length.out=5)) + 
+  labs(x = "Sampling interval (in mins)", y = "Predictive accuracy (as inferred from AUC)")
+
+
+
+################
+##GENERALIZATION TEST
+################
+#load(file.path(dd, "pr.saturation.1.genModelComp.RData"))
+pr.saturation.gen %>% 
+  group_by(interval) %>% 
+  summarize(ann.native = mean(pred.ann),
+            ann = mean(pred.ann.gen),
+            rf = mean(pred.rf.gen), 
+            svm = mean(pred.svm.gen),
+            xgb = mean(pred.xgb.gen),
+            lr = mean(pred.lr.gen)
+            ) %>% 
+  gather(method, accuracy, -interval) %>% 
+  ggplot() + 
+  geom_point(aes(x = interval, y = accuracy, color = method))+ 
+  geom_smooth(aes(x = interval, y = accuracy, color = method, group = method), se = F) + 
+  themeo
+
+mdf <- pr.saturation.gen %>% 
+  gather(method, accuracy, -interval, -shark)
+set.seed(70-1)
+ggplot(data = mdf %>% group_by(interval),
+       aes(x = interval, y = accuracy, group=method, color=method)) + 
+  geom_point(data = mdf %>% group_by(interval, method) %>% sample_n(100),
+             color = "light gray", alpha = 0.2) +
+  lapply(1:50, # NUMBER OF LOESS
+         function(i) {
+           # geom_smooth(data=mdf[sample(1:nrow(mdf), 
+           #                             2000),  #NUMBER OF POINTS TO SAMPLE
+           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess") 
+           geom_smooth(data=(mdf %>% group_by(interval) %>% sample_n(6)),  #NUMBER OF POINTS TO SAMPLE
+                       aes(x = interval, y = accuracy, color = method), se=FALSE, span = .90, size = 0.2, method = "loess")
+           # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
+           #             se=FALSE, span = .95, size = 0.2, method = "loess")
+         }) +
+  facet_wrap(~fct_relevel(as.factor(method), "pred.ann", "pred.ann.gen", "pred.rf.gen", "pred.svm.gen", "pred.xgb.gen", "pred.lr.gen")) +
   themeo + guides(color = F) +
   scale_x_continuous(expand=c(0,0), limits = c(0, window_max), breaks = seq(600, window_max, length.out = 5), labels = c("10","30","50","70","90")) +
   scale_y_continuous(limits = c(0.5, 1.0), breaks=seq(0.5,1.0, length.out=5)) + 
