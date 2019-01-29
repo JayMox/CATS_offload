@@ -12,6 +12,7 @@ library(reshape)
 library(gridExtra)
 library(grid)
 library(forcats)
+library(tidyverse)
 
 dd <- "/Users/jmoxley/Dropbox (MBA)/NN_processing/data/1hrTr_ModelComp_ReviewerResponse"
 themeo <-theme_classic()+
@@ -44,7 +45,7 @@ gen <- read.csv(file.path(dd, "Shark2_ODBA_6hrTest_pred_with_Shark1_multiple_mod
          ) %>% 
   filter(!is.na(time.sec))
 
-modeled <- gen
+modeled <- test
 saturation = NULL
 #window_max <- 10000 # in seconds
 window_max <- 5400 #just over 1.5hr
@@ -127,13 +128,13 @@ mdf <- pr.saturation %>%
 set.seed(70-1)
 ggplot(data = mdf %>% group_by(interval),
        aes(x = interval, y = accuracy, group=method, color=method)) + 
-  geom_point(data = mdf %>% group_by(interval, method) %>% sample_n(100),
-             color = "light gray", alpha = 0.2) +
+  # geom_point(data = mdf %>% group_by(interval, method) %>% sample_n(100),
+  #            color = "light gray", alpha = 0.2) +
   lapply(1:50, # NUMBER OF LOESS
          function(i) {
-           # geom_smooth(data=mdf[sample(1:nrow(mdf), 
+           # geom_smooth(data=mdf[sample(1:nrow(mdf),
            #                             2000),  #NUMBER OF POINTS TO SAMPLE
-           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess") 
+           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess")
            geom_smooth(data=(mdf %>% group_by(interval) %>% sample_n(4)),  #NUMBER OF POINTS TO SAMPLE
                        aes(x = interval, y = accuracy, color = method), se=FALSE, span = .90, size = 0.2, method = "loess")
            # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
@@ -173,16 +174,16 @@ ggplot(data = mdf %>% group_by(interval),
        aes(x = interval, y = accuracy, group=method, color=method)) + 
   geom_point(data = mdf %>% group_by(interval, method) %>% sample_n(100),
              color = "light gray", alpha = 0.2) +
-  lapply(1:50, # NUMBER OF LOESS
-         function(i) {
-           # geom_smooth(data=mdf[sample(1:nrow(mdf), 
-           #                             2000),  #NUMBER OF POINTS TO SAMPLE
-           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess") 
-           geom_smooth(data=(mdf %>% group_by(interval) %>% sample_n(6)),  #NUMBER OF POINTS TO SAMPLE
-                       aes(x = interval, y = accuracy, color = method), se=FALSE, span = .90, size = 0.2, method = "loess")
-           # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
-           #             se=FALSE, span = .95, size = 0.2, method = "loess")
-         }) +
+  # lapply(1:50, # NUMBER OF LOESS
+  #        function(i) {
+  #          # geom_smooth(data=mdf[sample(1:nrow(mdf),
+  #          #                             2000),  #NUMBER OF POINTS TO SAMPLE
+  #          #                      ], se=FALSE, span = .95, size = 0.2, method = "loess")
+  #          geom_smooth(data=(mdf %>% group_by(interval) %>% sample_n(6)),  #NUMBER OF POINTS TO SAMPLE
+  #                      aes(x = interval, y = accuracy, color = method), se=FALSE, span = .90, size = 0.2, method = "loess")
+  #          # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE
+  #          #             se=FALSE, span = .95, size = 0.2, method = "loess")
+  #        }) +
   facet_wrap(~fct_relevel(as.factor(method), "pred.ann", "pred.ann.gen", "pred.rf.gen", "pred.svm.gen", "pred.xgb.gen", "pred.lr.gen")) +
   themeo + guides(color = F) +
   scale_x_continuous(expand=c(0,0), limits = c(0, window_max), breaks = seq(600, window_max, length.out = 5), labels = c("10","30","50","70","90")) +

@@ -139,14 +139,14 @@ set.seed(70-1)
 ggplot(data = mdf %>% group_by(shark, trainhrs, interval) %>% 
          filter(training != "null"), 
        aes(x = interval, y = accuracy, group=trainhrs, color=shark)) + 
-  geom_point(data = mdf %>% group_by(shark, trainhrs, interval) %>% 
+  geom_point(data = mdf %>% group_by(shark, trainhrs, interval) %>%
                filter(training != "null") %>% sample_n(100),
              color = "light gray", alpha = 0.2) +
   lapply(1:50, # NUMBER OF LOESS
          function(i) {
-           # geom_smooth(data=mdf[sample(1:nrow(mdf), 
+           # geom_smooth(data=mdf[sample(1:nrow(mdf),
            #                             2000),  #NUMBER OF POINTS TO SAMPLE
-           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess") 
+           #                      ], se=FALSE, span = .95, size = 0.2, method = "loess")
            geom_smooth(data=(mdf %>% group_by(shark, trainhrs, interval) %>% filter(training != "null") %>% sample_n(4)),  #NUMBER OF POINTS TO SAMPLE
                        aes(x = interval, y = accuracy), se=FALSE, span = .90, size = 0.2, method = "loess")
            # geom_smooth(data=(mdf %>% group_by(variable) %>% sample_n(250)),  #NUMBER OF POINTS TO SAMPLE

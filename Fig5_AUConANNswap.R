@@ -122,10 +122,12 @@ for(j in 4:ncol(modeled)-1){
 
 
 #get data
-load(file.path(dd, "fmo_saturate.1hr.3hr.swap.RData"))
+load(file.path(dd, "fmo.saturate.1hr.3hr.swap.RData"))
 load(file.path(dd, "pr.saturation.1hr.3hr.swap.RData"))
-load(file.path(dd, "pr.saturation.null.RData"))
-load(file.path(dd, "fmo_saturate.null.RData"))
+load(file.path("/Users/jmoxley/Dropbox (MBA)/NN_processing/data/1hr_Prediction_testset_June18", 
+               "pr.saturation.null.RData"))
+load(file.path("/Users/jmoxley/Dropbox (MBA)/NN_processing/data/1hr_Prediction_testset_June18", 
+               "fmo_saturate.null.RData"))
 
 df <- bind_rows(fmo.saturation %>% select(-ODBA.pred.3hr), pr.saturation %>% select(-ODBA.pred.3hr))
 #melt
@@ -147,10 +149,10 @@ mdf <- bind_rows(fmo.saturation %>% select(-ODBA.pred.3hr),
 
 #full scale
 ggplot(mdf %>% filter(trainhrs != "null"), aes(x = interval, y = accuracy, color=shark)) + 
-  geom_point(color = "light gray", alpha = 0.2) +
+  #geom_point(color = "light gray", alpha = 0.2) +
   lapply(1:40, # NUMBER OF LOESS
          function(i) {
-           geom_smooth(data=mdf[sample(1:nrow(mdf), 
+           geom_smooth(data=mdf[sample(1:nrow(mdf),
                                        2000),  #NUMBER OF POINTS TO SAMPLE
                                 ], aes(color = factor(shark)), se=FALSE, span = .95, size = 0.2, method = "loess")
          }) +
